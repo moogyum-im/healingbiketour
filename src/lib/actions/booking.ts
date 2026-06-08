@@ -2,7 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { sendBookingConfirmedNotification } from '@/lib/notify/kakao'
+import {
+  sendBookingPendingNotification,
+  sendBookingConfirmedNotification,
+  sendBookingCancelledNotification,
+  sendAdminNewBookingNotification,
+} from '@/lib/notify/kakao'
 
 export interface CreateBookingInput {
   tourId: string
@@ -67,6 +72,32 @@ export async function createBooking(input: CreateBookingInput) {
     return { error: '예약 생성에 실패했습니다.' }
   }
 
+  // 예약 접수 알림 (고객 + 사장님)
+  const dateLabel = input.date
+    ? new Date(input.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '날짜 미정'
+
+  await Promise.all([
+    sendBookingPendingNotification({
+      phone: input.contactPhone,
+      name: input.contactName,
+      bookingNumber: booking.booking_number,
+      tourTitle: tour.title,
+      date: dateLabel,
+      participants: input.participants,
+      totalAmount: input.totalAmountKrw,
+    }).catch(console.error),
+    sendAdminNewBookingNotification({
+      bookingNumber: booking.booking_number,
+      tourTitle: tour.title,
+      date: dateLabel,
+      participants: input.participants,
+      totalAmount: input.totalAmountKrw,
+      contactName: input.contactName,
+      contactPhone: input.contactPhone,
+    }).catch(console.error),
+  ])
+
   return { data: booking }
 }
 
@@ -106,7 +137,7 @@ export async function confirmBooking(bookingId: string, paymentData: {
 
   const { data: booking } = await supabase
     .from('bookings')
-    .select('*, tours(title)')
+    .select('*, tours(title), tour_dates(date)')
     .eq('id', bookingId)
     .eq('user_id', user.id)
     .single()
@@ -115,6 +146,10 @@ export async function confirmBooking(bookingId: string, paymentData: {
 
   const creditAmount = paymentData.creditAmount ?? 0
   const paidAmount = booking.total_amount_krw - creditAmount
+  const tourDate = (booking as any).tour_dates
+  const dateLabel = tourDate?.date
+    ? new Date(tourDate.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '날짜 미정'
 
   // 크레딧 차감 (사용한 경우)
   if (creditAmount > 0) {
@@ -142,8 +177,8 @@ export async function confirmBooking(bookingId: string, paymentData: {
     phone: booking.contact_phone,
     name: booking.contact_name,
     bookingNumber: booking.booking_number,
-    tourTitle: booking.tours?.title ?? '',
-    date: booking.tour_date_id ?? '',
+    tourTitle: (booking as any).tours?.title ?? '',
+    date: dateLabel,
     participants: booking.participants,
     totalAmount: booking.total_amount_krw,
   }).catch(console.error)
@@ -162,13 +197,18 @@ export async function confirmBookingWithCredit(bookingId: string, creditAmount: 
 
   const { data: booking } = await supabase
     .from('bookings')
-    .select('*, tours(title)')
+    .select('*, tours(title), tour_dates(date)')
     .eq('id', bookingId)
     .eq('user_id', user.id)
     .single()
 
   if (!booking) return { error: '예약을 찾을 수 없습니다.' }
   if (creditAmount < booking.total_amount_krw) return { error: '크레딧이 부족합니다.' }
+
+  const tourDate = (booking as any).tour_dates
+  const dateLabel = tourDate?.date
+    ? new Date(tourDate.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
+    : '날짜 미정'
 
   const deductResult = await deductCredit(supabase, user.id, booking.total_amount_krw, bookingId)
   if (deductResult.error) return { error: deductResult.error }
@@ -192,8 +232,8 @@ export async function confirmBookingWithCredit(bookingId: string, creditAmount: 
     phone: booking.contact_phone,
     name: booking.contact_name,
     bookingNumber: booking.booking_number,
-    tourTitle: booking.tours?.title ?? '',
-    date: booking.tour_date_id ?? '',
+    tourTitle: (booking as any).tours?.title ?? '',
+    date: dateLabel,
     participants: booking.participants,
     totalAmount: booking.total_amount_krw,
   }).catch(console.error)
@@ -232,14 +272,29 @@ export async function cancelBooking(bookingId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
 
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('booking_number, contact_name, contact_phone, tours(title)')
+    .eq('id', bookingId)
+    .eq('user_id', user.id)
+    .eq('status', 'confirmed')
+    .single()
+
+  if (!booking) return { error: '취소할 수 없는 예약입니다.' }
+
   const { error } = await supabase
     .from('bookings')
     .update({ status: 'cancelled', updated_at: new Date().toISOString() })
     .eq('id', bookingId)
-    .eq('user_id', user.id)
-    .eq('status', 'confirmed')
 
   if (error) return { error: '취소에 실패했습니다.' }
+
+  await sendBookingCancelledNotification({
+    phone: booking.contact_phone,
+    name: booking.contact_name,
+    bookingNumber: booking.booking_number,
+    tourTitle: (booking as any).tours?.title ?? '',
+  }).catch(console.error)
 
   revalidatePath('/my/bookings')
   revalidatePath('/my')
