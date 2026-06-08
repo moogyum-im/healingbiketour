@@ -20,7 +20,8 @@
     "admin": "管理员",
     "logout": "退出登录",
     "logged_in_as": "已登录",
-    "bikes": "自行车介绍"
+    "bikes": "自行车介绍",
+    "my_page": "我的页面"
   },
   "hero": {
     "badge": "由自行车专家精心设计的路线",

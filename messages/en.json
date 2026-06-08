@@ -20,7 +20,8 @@
     "admin": "Admin",
     "logout": "Log Out",
     "logged_in_as": "Logged in",
-    "bikes": "Our Bikes"
+    "bikes": "Our Bikes",
+    "my_page": "My Page"
   },
   "hero": {
     "badge": "Built by real cyclists, for real adventures",

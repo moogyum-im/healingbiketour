@@ -2,12 +2,12 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, FileText, CheckCircle } from 'lucide-react'
+import { User, Mail, Phone, FileText, CheckCircle, Gift } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import Button from '@/components/ui/Button'
 import { formatPrice, formatDuration, formatDistance } from '@/utils/format'
 import Image from 'next/image'
-import { createBooking, confirmBooking } from '@/lib/actions/booking'
+import { createBooking, confirmBooking, confirmBookingWithCredit } from '@/lib/actions/booking'
 import toast from 'react-hot-toast'
 import type { Tour } from '@/types'
 
@@ -80,6 +80,9 @@ export default function BookingForm() {
   const [paymentMethod, setPaymentMethod] = useState<string>('kakaopay')
   const [selectedOptionId, setSelectedOptionId] = useState<string>('')
   const [form, setForm] = useState({ name: '', email: '', phone: '', requests: '' })
+  const [creditBalance, setCreditBalance] = useState(0)
+  const [useCredit, setUseCredit] = useState(false)
+  const [creditToUse, setCreditToUse] = useState(0)
 
   // 투어 정보 로드 (또는 resume 시 기존 예약 로드)
   useEffect(() => {
@@ -116,19 +119,26 @@ export default function BookingForm() {
     }
   }, [tourId, resumeId])
 
-  // 로그인 유저 정보 자동 입력 (신규 예약 시만)
+  // 로그인 유저 정보 + 크레딧 잔액 로드
   useEffect(() => {
-    if (resumeId) return
     const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      const meta = user.user_metadata ?? {}
-      setForm((prev) => ({
-        ...prev,
-        name:  prev.name  || meta.full_name || meta.name || '',
-        email: prev.email || user.email || '',
-        phone: prev.phone || meta.phone || '',
-      }))
+      if (!resumeId) {
+        const meta = user.user_metadata ?? {}
+        setForm((prev) => ({
+          ...prev,
+          name:  prev.name  || meta.full_name || meta.name || '',
+          email: prev.email || user.email || '',
+          phone: prev.phone || meta.phone || '',
+        }))
+      }
+      // 크레딧 잔액 조회
+      sb.from('credit_balances')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => setCreditBalance(data?.balance ?? 0))
     })
   }, [resumeId])
 
@@ -150,6 +160,10 @@ export default function BookingForm() {
     (tour.price_krw + (selectedOption?.price_modifier_krw ?? 0)) * participants +
     (selectedOption?.flat_fee_krw ?? 0)
   )
+  const maxCredit = Math.min(creditBalance, total)
+  const actualCreditToUse = useCredit ? Math.min(creditToUse, maxCredit) : 0
+  const payAmount = total - actualCreditToUse
+  const isFullCredit = payAmount <= 0
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -183,6 +197,19 @@ export default function BookingForm() {
         bookingId = bookingResult.data.id
       }
 
+      // 크레딧 전액 결제 (PortOne 생략)
+      if (isFullCredit) {
+        const confirmResult = await confirmBookingWithCredit(bookingId, actualCreditToUse)
+        if (confirmResult.error) {
+          toast.error(confirmResult.error)
+          setLoading(false)
+          return
+        }
+        toast.success('크레딧으로 결제가 완료되었습니다!')
+        router.push('/my?booked=success')
+        return
+      }
+
       const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod)
       const PortOne = await import('@portone/browser-sdk/v2')
       const response = await PortOne.requestPayment({
@@ -190,7 +217,7 @@ export default function BookingForm() {
         channelKey: selectedMethod?.channelKey ?? '',
         paymentId: `booking_${bookingId}${resumeId ? `_r${Date.now()}` : ''}`,
         orderName: tour.title,
-        totalAmount: total,
+        totalAmount: payAmount,
         currency: 'CURRENCY_KRW' as const,
         payMethod: paymentMethod === 'card' ? 'CARD' : 'EASY_PAY',
         customer: {
@@ -209,6 +236,7 @@ export default function BookingForm() {
       const confirmResult = await confirmBooking(bookingId, {
         paymentId: (response as { paymentId: string }).paymentId,
         method: paymentMethod,
+        creditAmount: actualCreditToUse,
       })
 
       if (confirmResult.error) {
@@ -218,7 +246,7 @@ export default function BookingForm() {
       }
 
       toast.success('결제가 완료되었습니다! 카카오톡 알림을 확인해주세요.')
-      router.push('/my/bookings?booked=success')
+      router.push('/my?booked=success')
     } catch (err) {
       console.error(err)
       toast.error('결제 처리 중 오류가 발생했습니다.')
@@ -317,8 +345,72 @@ export default function BookingForm() {
             </div>
           )}
 
+          {/* 크레딧 사용 */}
+          {creditBalance > 0 && (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-emerald-600" />
+                  <h2 className="text-lg font-bold text-zinc-900">크레딧 사용</h2>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-sm text-zinc-500">보유 {creditBalance.toLocaleString()}C</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !useCredit
+                      setUseCredit(next)
+                      if (next) setCreditToUse(maxCredit)
+                      else setCreditToUse(0)
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      useCredit ? 'bg-emerald-500' : 'bg-zinc-200'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                      useCredit ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </button>
+                </label>
+              </div>
+              {useCredit && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={maxCredit}
+                      step={100}
+                      value={creditToUse}
+                      onChange={(e) => setCreditToUse(Number(e.target.value))}
+                      className="flex-1 accent-emerald-500"
+                    />
+                    <span className="text-sm font-bold text-emerald-700 w-24 text-right shrink-0">
+                      {actualCreditToUse.toLocaleString()}C 사용
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setCreditToUse(maxCredit)}
+                      className="text-emerald-600 font-semibold hover:underline"
+                    >
+                      전액 사용 ({maxCredit.toLocaleString()}C)
+                    </button>
+                    <span className="text-zinc-500">
+                      할인 후 결제금액:{' '}
+                      <span className="font-bold text-zinc-900">
+                        {isFullCredit ? '0원 (크레딧 전액 결제)' : `${payAmount.toLocaleString()}원`}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 결제 수단 */}
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+          <div className={`rounded-2xl border border-zinc-200 bg-white p-6 ${isFullCredit ? 'opacity-40 pointer-events-none' : ''}`}>
             <h2 className="text-lg font-bold text-zinc-900 mb-4">결제 수단</h2>
             <div className="space-y-2">
               {PAYMENT_METHODS.map((method) => (
@@ -348,7 +440,10 @@ export default function BookingForm() {
           </div>
 
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            {formatPrice(total)} 결제하기
+            {isFullCredit
+              ? `크레딧 ${actualCreditToUse.toLocaleString()}C로 결제하기`
+              : `${formatPrice(payAmount)} 결제하기${actualCreditToUse > 0 ? ` (${actualCreditToUse.toLocaleString()}C 할인)` : ''}`
+            }
           </Button>
 
           <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
@@ -381,10 +476,24 @@ export default function BookingForm() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-zinc-100 pt-4">
+            <div className="border-t border-zinc-100 pt-4 space-y-2">
+              {actualCreditToUse > 0 && (
+                <div className="flex justify-between text-sm text-emerald-600">
+                  <span className="flex items-center gap-1">
+                    <Gift className="h-3.5 w-3.5" />
+                    크레딧 할인
+                  </span>
+                  <span>-{actualCreditToUse.toLocaleString()}원</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-zinc-900">
                 <span>총 결제금액</span>
-                <span className="text-emerald-700">{formatPrice(total)}</span>
+                <div className="text-right">
+                  {actualCreditToUse > 0 && (
+                    <p className="text-xs text-zinc-400 line-through font-normal">{formatPrice(total)}</p>
+                  )}
+                  <span className="text-emerald-700">{isFullCredit ? '0원' : formatPrice(payAmount)}</span>
+                </div>
               </div>
             </div>
           </div>

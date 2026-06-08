@@ -37,7 +37,7 @@ function WriteReviewForm() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Link href="/my/bookings" className="rounded-xl border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
+          <Link href="/my" className="rounded-xl border border-zinc-300 px-5 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50">
             예약 목록으로
           </Link>
           <Link href="/tours" className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
@@ -51,7 +51,7 @@ function WriteReviewForm() {
   return (
     <div className="mx-auto max-w-xl py-12 px-4">
       <div className="mb-8">
-        <Link href="/my/bookings" className="text-sm text-zinc-400 hover:text-zinc-600">← 예약 목록</Link>
+        <Link href="/my" className="text-sm text-zinc-400 hover:text-zinc-600">← 예약 목록</Link>
         <h1 className="mt-3 text-2xl font-black text-zinc-900">리뷰 작성</h1>
         <p className="mt-1 text-zinc-500 text-sm">{tourTitle}</p>
       </div>

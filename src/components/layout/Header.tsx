@@ -56,7 +56,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
     { label: t('tours'), href: '/tours', hasMega: true },
     { label: t('bikes'), href: '/bikes' },
     { label: t('about'), href: '/about' },
-    { label: t('booking_check'), href: '/my/bookings' },
+    { label: t('my_page'), href: '/my' },
     {
       label: t('contact'),
       href: '/faq',
@@ -270,9 +270,9 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       </Link>
                     </>
                   ) : (
-                    <Link href="/my/bookings" className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                    <Link href="/my" className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
                       <CalendarDays className="h-4 w-4" />
-                      {t('my_bookings')}
+                      {t('my_page')}
                     </Link>
                   )}
                   <form action={signOut}>
@@ -377,9 +377,9 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       </Link>
                     </>
                   ) : (
-                    <Link href="/my/bookings" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100" onClick={() => setMobileOpen(false)}>
+                    <Link href="/my" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100" onClick={() => setMobileOpen(false)}>
                       <CalendarDays className="h-4 w-4" />
-                      {t('my_bookings')}
+                      {t('my_page')}
                     </Link>
                   )}
                   <form action={signOut}>

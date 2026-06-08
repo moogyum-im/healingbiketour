@@ -70,18 +70,40 @@ export async function createBooking(input: CreateBookingInput) {
   return { data: booking }
 }
 
+// ── 크레딧 차감 헬퍼 ──────────────────────────────────────
+async function deductCredit(supabase: Awaited<ReturnType<typeof createClient>>, userId: string, amount: number, bookingId: string) {
+  const { data: balance } = await supabase
+    .from('credit_balances')
+    .select('balance')
+    .eq('user_id', userId)
+    .single()
+
+  if ((balance?.balance ?? 0) < amount) return { error: '크레딧 잔액이 부족합니다.' }
+
+  const { error } = await supabase.from('credits').insert({
+    user_id: userId,
+    amount: -amount,
+    type: 'purchase_used',
+    description: `예약 결제 사용`,
+    reference_id: bookingId,
+  })
+
+  if (error) return { error: '크레딧 차감에 실패했습니다.' }
+  return { success: true }
+}
+
 // ── 결제 완료 후 예약 확정 ─────────────────────────────────
 export async function confirmBooking(bookingId: string, paymentData: {
   paymentId: string
   method: string
   receiptUrl?: string
+  creditAmount?: number
 }) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: '로그인이 필요합니다.' }
 
-  // 결제 레코드 생성
   const { data: booking } = await supabase
     .from('bookings')
     .select('*, tours(title)')
@@ -91,24 +113,31 @@ export async function confirmBooking(bookingId: string, paymentData: {
 
   if (!booking) return { error: '예약을 찾을 수 없습니다.' }
 
+  const creditAmount = paymentData.creditAmount ?? 0
+  const paidAmount = booking.total_amount_krw - creditAmount
+
+  // 크레딧 차감 (사용한 경우)
+  if (creditAmount > 0) {
+    const result = await deductCredit(supabase, user.id, creditAmount, bookingId)
+    if (result.error) return { error: result.error }
+  }
+
   await supabase.from('payments').insert({
     booking_id: bookingId,
     payment_method: paymentData.method,
     portone_payment_id: paymentData.paymentId,
-    amount_krw: booking.total_amount_krw,
+    amount_krw: paidAmount,
     currency: 'KRW',
     status: 'paid',
     paid_at: new Date().toISOString(),
     receipt_url: paymentData.receiptUrl ?? null,
   })
 
-  // 예약 상태 → confirmed
   await supabase
     .from('bookings')
     .update({ status: 'confirmed', updated_at: new Date().toISOString() })
     .eq('id', bookingId)
 
-  // 카카오톡 알림 발송
   await sendBookingConfirmedNotification({
     phone: booking.contact_phone,
     name: booking.contact_name,
@@ -120,6 +149,57 @@ export async function confirmBooking(bookingId: string, paymentData: {
   }).catch(console.error)
 
   revalidatePath('/my/bookings')
+  revalidatePath('/my')
+  return { success: true, bookingNumber: booking.booking_number }
+}
+
+// ── 크레딧 전액 결제 (PortOne 없이) ───────────────────────
+export async function confirmBookingWithCredit(bookingId: string, creditAmount: number) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '로그인이 필요합니다.' }
+
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('*, tours(title)')
+    .eq('id', bookingId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!booking) return { error: '예약을 찾을 수 없습니다.' }
+  if (creditAmount < booking.total_amount_krw) return { error: '크레딧이 부족합니다.' }
+
+  const deductResult = await deductCredit(supabase, user.id, booking.total_amount_krw, bookingId)
+  if (deductResult.error) return { error: deductResult.error }
+
+  await supabase.from('payments').insert({
+    booking_id: bookingId,
+    payment_method: 'credit',
+    portone_payment_id: `credit_${bookingId}`,
+    amount_krw: 0,
+    currency: 'KRW',
+    status: 'paid',
+    paid_at: new Date().toISOString(),
+  })
+
+  await supabase
+    .from('bookings')
+    .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+    .eq('id', bookingId)
+
+  await sendBookingConfirmedNotification({
+    phone: booking.contact_phone,
+    name: booking.contact_name,
+    bookingNumber: booking.booking_number,
+    tourTitle: booking.tours?.title ?? '',
+    date: booking.tour_date_id ?? '',
+    participants: booking.participants,
+    totalAmount: booking.total_amount_krw,
+  }).catch(console.error)
+
+  revalidatePath('/my/bookings')
+  revalidatePath('/my')
   return { success: true, bookingNumber: booking.booking_number }
 }
 
@@ -162,5 +242,6 @@ export async function cancelBooking(bookingId: string) {
   if (error) return { error: '취소에 실패했습니다.' }
 
   revalidatePath('/my/bookings')
+  revalidatePath('/my')
   return { success: true }
 }

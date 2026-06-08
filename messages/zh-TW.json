@@ -18,7 +18,8 @@
     "admin": "管理員",
     "logout": "登出",
     "logged_in_as": "已登入",
-    "bikes": "自行車介紹"
+    "bikes": "自行車介紹",
+    "my_page": "我的頁面"
   },
   "hero": {
     "badge": "由單車專家精心設計的路線",
