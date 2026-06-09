@@ -86,6 +86,7 @@ export default async function TourDetailPage({ params }: PageProps) {
     distance_km:      Number(dbTour.distance_km),
     max_participants: dbTour.max_participants as number,
     price_krw:        dbTour.price_krw as number,
+    price_usd:        (dbTour.price_usd as number | null) ?? baseTour.price_usd,
     meeting_point:    dbTour.meeting_point as string,
     highlights:       (dbTour.highlights as string[] | null) ?? baseTour.highlights,
     includes:         (dbTour.includes as string[] | null) ?? baseTour.includes,
