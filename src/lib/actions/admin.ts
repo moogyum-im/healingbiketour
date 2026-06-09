@@ -39,3 +39,9 @@ export async function grantCredit(prevState: unknown, formData: FormData) {
   revalidatePath('/admin/credits')
   return { success: `${target.name ?? email}님께 ${amount.toLocaleString()} 크레딧을 지급했습니다.` }
 }
+
+export async function revalidateTours(slug?: string) {
+  revalidatePath('/', 'layout')
+  revalidatePath('/tours')
+  if (slug) revalidatePath(`/tours/${slug}`)
+}

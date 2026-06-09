@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { Plus, Trash2, Upload, X } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
+import { revalidateTours } from '@/lib/actions/admin'
 import type { TourOption } from '@/types'
 
 interface TourFormData {
@@ -198,6 +199,7 @@ export default function TourForm({ initialData }: TourFormProps) {
     if (error) {
       toast.error(error.message)
     } else {
+      await revalidateTours(form.slug)
       toast.success(isEdit ? '투어가 수정되었습니다.' : '투어가 등록되었습니다.')
       router.push('/admin/tours')
       router.refresh()
