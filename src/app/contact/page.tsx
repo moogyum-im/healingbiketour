@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import { MessageSquare, Phone, Mail, CheckCircle, Send, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { submitContactInquiry } from '@/lib/actions/contact'
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', phone: '', message: '' })
@@ -17,23 +17,14 @@ export default function ContactPage() {
     setLoading(true)
     setError('')
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    const { error: err } = await supabase.from('chat_inquiries').insert({
-      name: form.name || null,
-      phone: form.phone || null,
+    const result = await submitContactInquiry({
+      name: form.name || undefined,
+      phone: form.phone || undefined,
       message: form.message,
-      source_page: '/contact',
-      user_id: user?.id ?? null,
     })
 
-    if (err) {
-      setError('전송에 실패했습니다. 다시 시도해 주세요.')
+    if (result.error) {
+      setError(result.error)
     } else {
       setDone(true)
     }

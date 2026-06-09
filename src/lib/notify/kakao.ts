@@ -191,6 +191,40 @@ export async function sendBookingCancelledNotification(params: {
   }
 }
 
+// ── 신규 문의 알림 (사장님에게) ────────────────────────────────
+export async function sendAdminContactNotification(params: {
+  name?: string
+  phone?: string
+  message: string
+}) {
+  const adminPhone = process.env.SOLAPI_ADMIN_PHONE
+  if (!adminPhone) return
+
+  const preview = params.message.length > 60
+    ? params.message.slice(0, 60) + '...'
+    : params.message
+
+  await sendSms(
+    adminPhone,
+    `[힐링바이크투어 신규문의]\n이름: ${params.name || '익명'}\n연락처: ${params.phone || '미입력'}\n내용: ${preview}`,
+  )
+}
+
+// ── 신규 채팅 상담 알림 (사장님에게) ───────────────────────────
+export async function sendAdminChatNotification(params: {
+  name?: string
+  phone?: string
+  sourcePage?: string
+}) {
+  const adminPhone = process.env.SOLAPI_ADMIN_PHONE
+  if (!adminPhone) return
+
+  await sendSms(
+    adminPhone,
+    `[힐링바이크투어 채팅상담 요청]\n이름: ${params.name || '익명'}\n연락처: ${params.phone || '미입력'}\n페이지: ${params.sourcePage || '알 수 없음'}\n관리자 페이지에서 확인해 주세요.`,
+  )
+}
+
 // ── 신규 예약 알림 (사장님에게) ────────────────────────────────
 export async function sendAdminNewBookingNotification(params: {
   bookingNumber: string

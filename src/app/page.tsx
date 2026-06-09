@@ -5,6 +5,7 @@ import ReviewSection from '@/components/home/ReviewSection'
 import VideoHighlightSection from '@/components/home/VideoHighlightSection'
 import { getToursWithOverrides } from '@/lib/tours'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Award, Bike, Film } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
@@ -36,6 +37,55 @@ export default async function HomePage() {
       <HeroSection />
       <CategorySection />
       <FeaturedTours tours={featuredTours} />
+
+      {/* Expert Guide */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            {/* 인증서 3장 */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { year: '2013', title: '국토종주 완주 인증', color: 'emerald', img: '/cert-2013-national.jpeg' },
+                { year: '2014', title: '4대강 자전거길 완주 인증', color: 'blue', img: '/cert-2014-river.jpeg' },
+                { year: '2020', title: '그랜드슬램 인증', color: 'amber', img: '/cert-2020-grandslam.jpeg' },
+              ].map((cert) => (
+                <div key={cert.year} className="flex flex-col gap-2">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border border-zinc-200 shadow-md">
+                    <Image
+                      src={cert.img}
+                      alt={cert.title}
+                      fill
+                      className="object-cover object-center scale-[1.18]"
+                      sizes="(max-width: 768px) 33vw, 20vw"
+                    />
+                    <span className={`absolute top-2 left-2 text-xs font-black px-2 py-0.5 rounded-full shadow-sm ${
+                      cert.color === 'emerald' ? 'bg-emerald-500 text-white' :
+                      cert.color === 'blue' ? 'bg-blue-500 text-white' :
+                      'bg-amber-500 text-white'
+                    }`}>{cert.year}</span>
+                  </div>
+                  <p className="text-center text-xs font-semibold text-zinc-500 leading-snug">{cert.title}</p>
+                </div>
+              ))}
+            </div>
+            {/* 텍스트 */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">EXPERT GUIDE</p>
+              <h2 className="text-3xl font-black text-zinc-900 sm:text-4xl">
+                직접 달리고<br />직접 설계한 코스
+              </h2>
+              <p className="mt-5 text-zinc-600 leading-relaxed">
+                국토종주 633km, 4대강 자전거길, 동해안까지 — 대한민국 주요 국가 자전거길을 모두 완주한
+                전문 가이드가 직접 기획한 코스입니다. 지도만 보고 만든 코스가 아닌,
+                수백 번 달리며 검증한 루트를 안내합니다.
+              </p>
+              <Link href="/about" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
+                가이드 소개 보기
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Why Us */}
       <section className="py-20 bg-zinc-950 text-white">

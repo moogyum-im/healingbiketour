@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { sendAdminChatNotification } from '@/lib/notify/kakao'
 
 // 세션 생성
 export async function POST(req: Request) {
@@ -18,6 +19,13 @@ export async function POST(req: Request) {
       console.error('chat session error:', error)
       return NextResponse.json({ error: '세션 생성 실패: ' + error.message }, { status: 500 })
     }
+
+    sendAdminChatNotification({
+      name: name || undefined,
+      phone: phone || undefined,
+      sourcePage: sourcePage || undefined,
+    }).catch(console.error)
+
     return NextResponse.json({ sessionId: data.id })
   }
 

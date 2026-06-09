@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Bike, MapPin, Shield, Heart, Users, Star, Mail } from 'lucide-react'
+import { Bike, MapPin, Shield, Heart, Users, Star, Mail, ExternalLink } from 'lucide-react'
 
 export const metadata = { title: '회사 소개 | 힐링바이크투어' }
 
@@ -28,10 +28,39 @@ const values = [
 ]
 
 const stats = [
-  { value: '전문', label: '가이드 동행' },
-  { value: '소규모', label: '그룹 운영' },
-  { value: '완비', label: '안전 장비' },
-  { value: '확장 중', label: '전국 코스' },
+  { value: '633km', label: '국토종주 완주' },
+  { value: '3개', label: '국가 공인 완주 인증' },
+  { value: '그랜드슬램', label: '최고 등급 완주 달성' },
+]
+
+const certifications = [
+  {
+    year: '2013',
+    title: '국토종주 완주 인증',
+    subtitle: '633km 완주',
+    desc: '인천 아라서해갑문에서 부산 낙동강 하굿둑까지, 대한민국 국토를 자전거로 종주한 공식 인증.',
+    issuer: 'K-water · 행정안전부',
+    color: 'emerald',
+    img: '/cert-2013-national.jpeg',
+  },
+  {
+    year: '2014',
+    title: '4대강 자전거길 완주 인증',
+    subtitle: '한강 · 낙동강 · 금강 · 영산강',
+    desc: '대한민국 4개 주요 강줄기 자전거길을 모두 완주한 공식 인증.',
+    issuer: 'K-water · 행정안전부',
+    color: 'blue',
+    img: '/cert-2014-river.jpeg',
+  },
+  {
+    year: '2020',
+    title: '국토종주 그랜드슬램 인증',
+    subtitle: '최고 등급 달성',
+    desc: '국토종주, 4대강, 동해안 등 모든 주요 국가 자전거길을 완주한 최상위 등급 공식 인증.',
+    issuer: '국토교통부 · 행정안전부',
+    color: 'amber',
+    img: '/cert-2020-grandslam.jpeg',
+  },
 ]
 
 export default function AboutPage() {
@@ -104,8 +133,56 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Values */}
+      {/* Certifications */}
       <section className="bg-zinc-50 py-20">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-12 text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">CERTIFICATIONS</p>
+            <h2 className="text-3xl font-black text-zinc-900">국가 공인 완주 인증</h2>
+            <p className="mt-3 text-zinc-500 max-w-xl mx-auto">
+              직접 달려보고 설계한 코스입니다. 국토교통부·행정안전부가 발급한 공식 완주 인증이 전문성을 증명합니다.
+            </p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {certifications.map((cert) => (
+              <div key={cert.year} className="rounded-2xl bg-white border border-zinc-200 shadow-sm flex flex-col overflow-hidden">
+                {/* 실제 인증서 이미지 */}
+                <div className="relative aspect-[3/4] bg-zinc-100 overflow-hidden">
+                  <Image
+                    src={cert.img}
+                    alt={cert.title}
+                    fill
+                    className="object-cover object-center scale-[1.18]"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                  <span className={`absolute top-3 left-3 text-xs font-black px-2.5 py-1 rounded-full shadow ${
+                    cert.color === 'emerald' ? 'bg-emerald-500 text-white' :
+                    cert.color === 'blue' ? 'bg-blue-500 text-white' :
+                    'bg-amber-500 text-white'
+                  }`}>{cert.year}</span>
+                </div>
+                {/* 텍스트 정보 */}
+                <div className="p-5 flex flex-col flex-1">
+                  <h3 className="font-black text-zinc-900 text-base leading-snug">{cert.title}</h3>
+                  <p className={`text-xs font-bold mt-1 ${
+                    cert.color === 'emerald' ? 'text-emerald-600' :
+                    cert.color === 'blue' ? 'text-blue-600' :
+                    'text-amber-600'
+                  }`}>{cert.subtitle}</p>
+                  <p className="mt-2 text-sm text-zinc-500 leading-relaxed flex-1">{cert.desc}</p>
+                  <div className="mt-4 pt-4 border-t border-zinc-100 flex items-center gap-2">
+                    <svg className="h-3.5 w-3.5 text-zinc-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                    <span className="text-xs text-zinc-400">{cert.issuer}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="bg-white py-20">
         <div className="mx-auto max-w-4xl px-6">
           <div className="mb-12 text-center">
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">OUR VALUES</p>
