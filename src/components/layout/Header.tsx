@@ -53,10 +53,8 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
   }
 
   const navLinks: NavLink[] = [
-    { label: t('tours'), href: '/tours', hasMega: true },
-    { label: t('bikes'), href: '/bikes' },
     { label: t('about'), href: '/about' },
-    { label: t('my_page'), href: '/my' },
+    { label: t('bikes'), href: '/bikes' },
     {
       label: t('contact'),
       href: '/faq',
@@ -237,8 +235,73 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
         </nav>
 
         {/* Desktop Right */}
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           <LanguageSwitcher />
+
+          {/* 투어예약 CTA */}
+          <div
+            className="relative"
+            onMouseEnter={() => openMenu('tours_cta')}
+            onMouseLeave={closeMenu}
+          >
+            <Link
+              href="/tours"
+              className="flex items-center gap-1 rounded-full border-2 border-emerald-600 px-5 py-2 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-600 hover:text-white"
+            >
+              {t('tours')}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Link>
+            {openDropdown === 'tours_cta' && (
+              <div className="absolute right-0 top-full w-[560px] pt-1">
+                <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl p-4">
+                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">진행 중인 투어</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeTours.map((tour) => (
+                      <Link
+                        key={tour.slug}
+                        href={`/tours/${tour.slug}`}
+                        className="flex gap-3 items-center rounded-xl p-2.5 hover:bg-emerald-50 group transition-colors"
+                        onClick={() => setOpenDropdown(null)}
+                      >
+                        <div className="relative h-14 w-20 shrink-0 rounded-lg overflow-hidden bg-zinc-100">
+                          <Image
+                            src={tour.thumbnail_url}
+                            alt={tour.title}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                            {tour.title}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${difficultyColor[tour.difficulty]}`}>
+                              {getDifficultyLabel(tour.difficulty)}
+                            </span>
+                            <span className="flex items-center gap-0.5 text-[11px] text-zinc-400">
+                              <Route className="h-3 w-3" />
+                              {tour.distance_km}km
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="border-t border-zinc-100 mt-3 pt-3">
+                    <Link
+                      href="/tours"
+                      className="block text-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                      onClick={() => setOpenDropdown(null)}
+                    >
+                      전체 투어 보기 →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {loading ? (
             <div className="h-8 w-20 animate-pulse rounded-lg bg-zinc-100" />
@@ -323,6 +386,27 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
       {mobileOpen && (
         <div className="border-t border-zinc-200 bg-white md:hidden">
           <nav className="px-4 py-3 space-y-1">
+            <div>
+              <Link
+                href="/tours"
+                className="block rounded-full border-2 border-emerald-600 px-4 py-2.5 text-center text-sm font-bold text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all mb-2"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t('tours')}
+              </Link>
+              <div className="ml-3 space-y-1 border-l-2 border-zinc-100 pl-3">
+                {activeTours.map((tour) => (
+                  <Link
+                    key={tour.slug}
+                    href={`/tours/${tour.slug}`}
+                    className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {tour.title}
+                  </Link>
+                ))}
+              </div>
+            </div>
             {navLinks.map((link) => (
               <div key={link.label}>
                 <Link
