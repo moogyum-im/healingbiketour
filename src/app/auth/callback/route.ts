@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[Auth Callback] code exchange error:', error)
-      return NextResponse.redirect(new URL('/auth/login?error=oauth_failed', requestUrl.origin))
+      return NextResponse.redirect(new URL(`/auth/login?error=oauth_failed&msg=${encodeURIComponent(error.message)}`, requestUrl.origin))
     }
   } else if (token_hash && type) {
     // Naver OAuth 또는 Magic Link 처리
