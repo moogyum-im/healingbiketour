@@ -8,7 +8,8 @@ import {
   MessageCircle, Route, HelpCircle, Megaphone, MessageSquare,
 } from 'lucide-react'
 import { useSession } from '@/providers/SessionProvider'
-import { signOut } from '@/lib/actions/auth'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
 import { getCategoryLabel, getDifficultyLabel } from '@/utils/format'
@@ -39,7 +40,15 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
   const activeTours = tours.filter((t) => t.is_active)
   const { user, role, loading } = useSession()
   const isAdmin = role === 'admin'
+  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const t = useTranslations('nav')
@@ -338,15 +347,14 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       {t('my_page')}
                     </Link>
                   )}
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t('logout')}
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {t('logout')}
+                  </button>
                 </div>
                 </div>
               )}
