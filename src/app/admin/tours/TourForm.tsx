@@ -261,11 +261,11 @@ export default function TourForm({ initialData }: TourFormProps) {
           </div>
           <div>
             <label className={labelCls}>소요 시간 (시간) *</label>
-            <input type="number" required step="0.5" min="0.5" value={form.duration_hours} onChange={set('duration_hours')} className={inputCls} placeholder="3" />
+            <input type="number" required step="any" min="0" value={form.duration_hours} onChange={set('duration_hours')} className={inputCls} placeholder="3" />
           </div>
           <div>
             <label className={labelCls}>거리 (km) *</label>
-            <input type="number" required step="0.5" min="1" value={form.distance_km} onChange={set('distance_km')} className={inputCls} placeholder="20" />
+            <input type="number" required step="any" min="0" value={form.distance_km} onChange={set('distance_km')} className={inputCls} placeholder="20" />
           </div>
           <div>
             <label className={labelCls}>최대 인원 *</label>
