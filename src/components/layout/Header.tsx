@@ -474,15 +474,14 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       {t('my_page')}
                     </Link>
                   )}
-                  <form action={signOut}>
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t('logout')}
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    {t('logout')}
+                  </button>
                 </>
               ) : (
                 <>
