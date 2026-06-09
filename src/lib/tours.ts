@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { mockTours } from '@/lib/mock-data'
 import type { Tour } from '@/types'
@@ -36,6 +37,7 @@ function dbRowToTour(t: Record<string, unknown>, fallback?: Tour): Tour {
 }
 
 export async function getToursWithOverrides(): Promise<Tour[]> {
+  noStore()
   try {
     const supabase = await createClient()
 
