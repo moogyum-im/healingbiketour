@@ -5,13 +5,14 @@ import Image from 'next/image'
 import { useState, useRef } from 'react'
 import {
   Menu, X, ChevronDown, User, LogOut, Settings, CalendarDays,
-  MessageCircle, Route, HelpCircle, Megaphone, MessageSquare,
+  MessageCircle, Route, HelpCircle, Megaphone, MessageSquare, KeyRound, Search,
 } from 'lucide-react'
 import { useSession } from '@/providers/SessionProvider'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from './LanguageSwitcher'
+import SearchModal from './SearchModal'
 import { getCategoryLabel, getDifficultyLabel } from '@/utils/format'
 import type { Tour } from '@/types'
 
@@ -50,6 +51,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
     router.refresh()
   }
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const t = useTranslations('nav')
 
@@ -62,33 +64,14 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
   }
 
   const navLinks: NavLink[] = [
-    { label: t('about'), href: '/about' },
     { label: t('bikes'), href: '/bikes' },
-    {
-      label: t('contact'),
-      href: '/faq',
-      children: [
-        {
-          icon: HelpCircle,
-          label: t('faq'),
-          desc: t('faq_desc'),
-          href: '/faq',
-        },
-        {
-          icon: Megaphone,
-          label: t('notice'),
-          desc: t('notice_desc'),
-          href: '/notice',
-        },
-        {
-          icon: MessageSquare,
-          label: t('consulting'),
-          desc: t('consulting_desc'),
-          href: '/contact',
-          accent: true,
-        },
-      ],
-    },
+    { label: t('about'), href: '/about' },
+  ]
+
+  const contactChildren: NavChild[] = [
+    { icon: HelpCircle,    label: t('faq'),        desc: t('faq_desc'),        href: '/faq' },
+    { icon: Megaphone,     label: t('notice'),     desc: t('notice_desc'),     href: '/notice' },
+    { icon: MessageSquare, label: t('consulting'), desc: t('consulting_desc'), href: '/contact', accent: true },
   ]
 
   const displayName =
@@ -114,6 +97,77 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 md:flex">
+          {/* 예약하기 CTA — 맨 앞 */}
+          <div
+            className="relative mr-2"
+            onMouseEnter={() => openMenu('tours_cta')}
+            onMouseLeave={closeMenu}
+          >
+            <button className="flex items-center gap-1 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 hover:scale-[1.02]">
+              {t('tours')}
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+            {openDropdown === 'tours_cta' && (
+              <div className="absolute left-0 top-full w-[580px] pt-1">
+                <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl overflow-hidden">
+                  <div className="p-4">
+                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                      <Route className="h-3.5 w-3.5" /> 투어 예약
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {activeTours.map((tour) => (
+                        <Link
+                          key={tour.slug}
+                          href={`/tours/${tour.slug}`}
+                          className="flex gap-3 items-center rounded-xl p-2.5 hover:bg-emerald-50 group transition-colors"
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          <div className="relative h-14 w-20 shrink-0 rounded-lg overflow-hidden bg-zinc-100">
+                            <Image src={tour.thumbnail_url} alt={tour.title} fill className="object-cover" sizes="80px" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                              {tour.title}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${difficultyColor[tour.difficulty]}`}>
+                                {getDifficultyLabel(tour.difficulty)}
+                              </span>
+                              <span className="flex items-center gap-0.5 text-[11px] text-zinc-400">
+                                <Route className="h-3 w-3" />{tour.distance_km}km
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-zinc-100">
+                      <Link href="/tours" className="block text-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors" onClick={() => setOpenDropdown(null)}>
+                        전체 투어 보기 →
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="border-t border-zinc-100 bg-zinc-50 px-4 py-3">
+                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <KeyRound className="h-3.5 w-3.5" /> 자전거 렌탈
+                    </p>
+                    <Link
+                      href="/rental"
+                      onClick={() => setOpenDropdown(null)}
+                      className="flex items-center justify-between rounded-xl bg-white border border-zinc-200 px-4 py-3 hover:border-emerald-300 hover:bg-emerald-50 group transition-all"
+                    >
+                      <div>
+                        <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">자전거 렌탈 예약</p>
+                        <p className="text-xs text-zinc-400 mt-0.5">24시간 · 48시간 · 72시간 · 헬멧·자물쇠 무상</p>
+                      </div>
+                      <span className="text-sm font-bold text-emerald-600 group-hover:translate-x-0.5 transition-transform">예약하기 →</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {navLinks.map((link) => {
             if (link.hasMega) {
               return (
@@ -246,67 +300,43 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
         {/* Desktop Right */}
         <div className="hidden items-center gap-3 md:flex">
           <LanguageSwitcher />
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+            aria-label="검색"
+          >
+            <Search className="h-4.5 w-4.5" />
+          </button>
 
-          {/* 투어예약 CTA */}
+          {/* 문의하기 드롭다운 */}
           <div
             className="relative"
-            onMouseEnter={() => openMenu('tours_cta')}
+            onMouseEnter={() => openMenu('contact')}
             onMouseLeave={closeMenu}
           >
-            <Link
-              href="/tours"
-              className="flex items-center gap-1 rounded-full border-2 border-emerald-600 px-5 py-2 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-600 hover:text-white"
-            >
-              {t('tours')}
-              <ChevronDown className="h-3.5 w-3.5" />
-            </Link>
-            {openDropdown === 'tours_cta' && (
-              <div className="absolute right-0 top-full w-[560px] pt-1">
-                <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl p-4">
-                  <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">진행 중인 투어</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {activeTours.map((tour) => (
-                      <Link
-                        key={tour.slug}
-                        href={`/tours/${tour.slug}`}
-                        className="flex gap-3 items-center rounded-xl p-2.5 hover:bg-emerald-50 group transition-colors"
-                        onClick={() => setOpenDropdown(null)}
-                      >
-                        <div className="relative h-14 w-20 shrink-0 rounded-lg overflow-hidden bg-zinc-100">
-                          <Image
-                            src={tour.thumbnail_url}
-                            alt={tour.title}
-                            fill
-                            className="object-cover"
-                            sizes="80px"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
-                            {tour.title}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                            <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${difficultyColor[tour.difficulty]}`}>
-                              {getDifficultyLabel(tour.difficulty)}
-                            </span>
-                            <span className="flex items-center gap-0.5 text-[11px] text-zinc-400">
-                              <Route className="h-3 w-3" />
-                              {tour.distance_km}km
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                  <div className="border-t border-zinc-100 mt-3 pt-3">
+            <button className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900">
+              {t('contact')}
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {openDropdown === 'contact' && (
+              <div className="absolute right-0 top-full w-72 pt-1">
+                <div className="rounded-2xl border border-zinc-200 bg-white shadow-xl p-2 overflow-hidden">
+                  {contactChildren.map((child) => (
                     <Link
-                      href="/tours"
-                      className="block text-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                      key={child.href}
+                      href={child.href}
                       onClick={() => setOpenDropdown(null)}
+                      className={`flex items-center gap-3 rounded-xl px-3 py-3 transition-colors group ${child.accent ? 'hover:bg-emerald-50' : 'hover:bg-zinc-50'}`}
                     >
-                      전체 투어 보기 →
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${child.accent ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-100 text-zinc-500 group-hover:bg-zinc-200'}`}>
+                        <child.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${child.accent ? 'text-emerald-700' : 'text-zinc-900'}`}>{child.label}</p>
+                        <p className="text-xs text-zinc-400 mt-0.5">{child.desc}</p>
+                      </div>
                     </Link>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -381,6 +411,13 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
         <div className="flex items-center gap-1 md:hidden">
           <LanguageSwitcher />
           <button
+            onClick={() => setSearchOpen(true)}
+            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100"
+            aria-label="검색"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+          <button
             className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
@@ -394,27 +431,39 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
       {mobileOpen && (
         <div className="border-t border-zinc-200 bg-white md:hidden">
           <nav className="px-4 py-3 space-y-1">
-            <div>
-              <Link
-                href="/tours"
-                className="block rounded-full border-2 border-emerald-600 px-4 py-2.5 text-center text-sm font-bold text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all mb-2"
-                onClick={() => setMobileOpen(false)}
-              >
-                {t('tours')}
-              </Link>
-              <div className="ml-3 space-y-1 border-l-2 border-zinc-100 pl-3">
-                {activeTours.map((tour) => (
-                  <Link
-                    key={tour.slug}
-                    href={`/tours/${tour.slug}`}
-                    className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {tour.title}
+            {/* 예약하기 섹션 */}
+            <div className="rounded-2xl bg-zinc-50 p-3 space-y-2">
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">예약하기</p>
+
+              {/* 투어 */}
+              <div>
+                <p className="px-1 py-1 text-[11px] font-semibold text-zinc-400 flex items-center gap-1">
+                  <Route className="h-3 w-3" /> 투어 예약
+                </p>
+                <div className="space-y-0.5">
+                  <Link href="/tours" className="block rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50" onClick={() => setMobileOpen(false)}>
+                    전체 투어 보기
                   </Link>
-                ))}
+                  {activeTours.map((tour) => (
+                    <Link key={tour.slug} href={`/tours/${tour.slug}`} className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>
+                      {tour.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* 렌탈 */}
+              <div className="border-t border-zinc-200 pt-2">
+                <p className="px-1 py-1 text-[11px] font-semibold text-zinc-400 flex items-center gap-1">
+                  <KeyRound className="h-3 w-3" /> 자전거 렌탈
+                </p>
+                <Link href="/rental" className="block rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>
+                  렌탈 예약하기 <span className="text-xs text-zinc-400">24 · 48 · 72시간</span>
+                </Link>
               </div>
             </div>
+
+            {/* 나머지 네비 */}
             {navLinks.map((link) => (
               <div key={link.label}>
                 <Link
@@ -424,31 +473,13 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                 >
                   {link.label}
                 </Link>
-                {link.hasMega && (
-                  <div className="ml-3 space-y-1 border-l-2 border-zinc-100 pl-3">
-                    {activeTours.map((tour) => (
-                      <Link
-                        key={tour.slug}
-                        href={`/tours/${tour.slug}`}
-                        className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700"
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        {tour.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
                 {link.children && (
                   <div className="ml-3 space-y-1 border-l-2 border-zinc-100 pl-3">
                     {link.children.map((child) => (
                       <Link
                         key={child.href}
                         href={child.href}
-                        className={`block rounded-lg px-3 py-2 text-sm font-medium ${
-                          child.accent
-                            ? 'text-emerald-700 hover:bg-emerald-50'
-                            : 'text-zinc-600 hover:bg-zinc-50'
-                        }`}
+                        className={`block rounded-lg px-3 py-2 text-sm font-medium ${child.accent ? 'text-emerald-700 hover:bg-emerald-50' : 'text-zinc-600 hover:bg-zinc-50'}`}
                         onClick={() => setMobileOpen(false)}
                       >
                         {child.label}
@@ -506,6 +537,8 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
           </nav>
         </div>
       )}
+
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} tours={tours} />
     </header>
   )
 }

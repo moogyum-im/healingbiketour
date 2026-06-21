@@ -37,6 +37,7 @@ export async function grantCredit(prevState: unknown, formData: FormData) {
   if (error) return { error: '크레딧 지급에 실패했습니다.' }
 
   revalidatePath('/admin/credits')
+  revalidatePath('/admin/users')
   return { success: `${target.name ?? email}님께 ${amount.toLocaleString()} 크레딧을 지급했습니다.` }
 }
 

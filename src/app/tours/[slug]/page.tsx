@@ -19,6 +19,7 @@ import TourLegalSection from '@/components/tours/TourLegalSection'
 import RouteSection from '@/components/tours/RouteSection'
 import AraRouteSection from '@/components/tours/AraRouteSection'
 import HaengjuRouteSection from '@/components/tours/HaengjuRouteSection'
+import PeaceNuriRouteSection from '@/components/tours/PeaceNuriRouteSection'
 import DrinkingWarning from '@/components/ui/DrinkingWarning'
 import TourAdminEditor from '@/components/admin/TourAdminEditor'
 import ReviewsPreview from '@/components/tours/ReviewsPreview'
@@ -43,12 +44,14 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const tour = mockTours.find((t) => t.slug === slug)
-  if (!tour) return {}
-  return {
-    title: tour.title,
-    description: tour.short_description,
-  }
+  const mock = mockTours.find((t) => t.slug === slug)
+  if (mock) return { title: mock.title, description: mock.short_description }
+
+  // DB 전용 투어
+  const supabase = await createClient()
+  const { data } = await supabase.from('tours').select('title, short_description').eq('slug', slug).maybeSingle()
+  if (!data) return {}
+  return { title: data.title, description: data.short_description }
 }
 
 const difficultyVariant: Record<string, 'success' | 'warning' | 'danger'> = {
@@ -57,12 +60,41 @@ const difficultyVariant: Record<string, 'success' | 'warning' | 'danger'> = {
   hard: 'danger',
 }
 
+function buildTour(dbTour: Record<string, unknown>, base?: TourType): TourType {
+  return {
+    id:               dbTour.id as string,
+    slug:             dbTour.slug as string,
+    title:            dbTour.title as string,
+    title_en:         (dbTour.title_en as string | null) ?? base?.title_en,
+    description:      dbTour.description as string,
+    short_description: dbTour.short_description as string,
+    category:         (dbTour.category as TourType['category']) ?? base?.category ?? 'city',
+    difficulty:       (dbTour.difficulty as TourType['difficulty']) ?? base?.difficulty ?? 'easy',
+    duration_hours:   Number(dbTour.duration_hours),
+    distance_km:      Number(dbTour.distance_km),
+    max_participants: dbTour.max_participants as number,
+    price_krw:        dbTour.price_krw as number,
+    price_usd:        (dbTour.price_usd as number | null) ?? base?.price_usd,
+    thumbnail_url:    (dbTour.thumbnail_url as string | null) ?? base?.thumbnail_url ?? '',
+    images:           base?.images ?? [],
+    meeting_point:    dbTour.meeting_point as string,
+    highlights:       (dbTour.highlights as string[] | null) ?? base?.highlights ?? [],
+    includes:         (dbTour.includes as string[] | null) ?? base?.includes ?? [],
+    excludes:         (dbTour.excludes as string[] | null) ?? base?.excludes ?? [],
+    requirements:     (dbTour.requirements as string[] | null) ?? base?.requirements ?? [],
+    options:          (dbTour.options as TourType['options']) ?? base?.options,
+    rating:           base?.rating ?? 0,
+    review_count:     base?.review_count ?? 0,
+    is_active:        dbTour.is_active as boolean,
+    created_at:       dbTour.created_at as string,
+    updated_at:       dbTour.updated_at as string,
+  }
+}
+
 export default async function TourDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const baseTour = mockTours.find((t) => t.slug === slug)
-  if (!baseTour) notFound()
+  const mockTour = mockTours.find((t) => t.slug === slug)
 
-  // DB에서 tour 전체 + is_active 조회
   const supabase = await createClient()
   const { data: dbTour } = await supabase
     .from('tours')
@@ -70,35 +102,18 @@ export default async function TourDetailPage({ params }: PageProps) {
     .eq('slug', slug)
     .maybeSingle()
 
-  // DB에 비활성 처리된 투어면 404
-  if (dbTour && dbTour.is_active === false) notFound()
+  // mock에도 DB에도 없으면 404
+  if (!dbTour && !mockTour) notFound()
 
-  // DB 데이터가 있으면 전체 반영, 없으면 mock 그대로
-  const tour: TourType = dbTour ? {
-    ...baseTour,
-    id:               dbTour.id,
-    title:            dbTour.title,
-    title_en:         (dbTour.title_en as string | null) ?? baseTour.title_en,
-    description:      dbTour.description,
-    short_description: dbTour.short_description,
-    thumbnail_url:    (dbTour.thumbnail_url as string | null) ?? baseTour.thumbnail_url,
-    duration_hours:   Number(dbTour.duration_hours),
-    distance_km:      Number(dbTour.distance_km),
-    max_participants: dbTour.max_participants as number,
-    price_krw:        dbTour.price_krw as number,
-    price_usd:        (dbTour.price_usd as number | null) ?? baseTour.price_usd,
-    meeting_point:    dbTour.meeting_point as string,
-    highlights:       (dbTour.highlights as string[] | null) ?? baseTour.highlights,
-    includes:         (dbTour.includes as string[] | null) ?? baseTour.includes,
-    excludes:         (dbTour.excludes as string[] | null) ?? baseTour.excludes,
-    requirements:     (dbTour.requirements as string[] | null) ?? baseTour.requirements,
-    options:          (dbTour.options as TourType['options']) ?? baseTour.options,
-    is_active:        dbTour.is_active as boolean,
-    updated_at:       dbTour.updated_at as string,
-  } : baseTour
+  // 비활성 투어 404
+  if (dbTour?.is_active === false) notFound()
+
+  const tour: TourType = dbTour
+    ? buildTour(dbTour as Record<string, unknown>, mockTour)
+    : mockTour!
 
   // DB tour의 실제 UUID (리뷰 조회에 사용)
-  const tourDbId = dbTour?.id ?? baseTour.id
+  const tourDbId = dbTour?.id ?? mockTour!.id
 
   // 실제 리뷰 통계 조회
   const { data: reviewStats } = await supabase
@@ -114,14 +129,16 @@ export default async function TourDetailPage({ params }: PageProps) {
     <div className="bg-white">
       {/* Hero Image */}
       <div className="relative h-[50vh] sm:h-[60vh] max-h-[640px] bg-zinc-200">
-        <Image
-          src={tour.thumbnail_url}
-          alt={tour.title}
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        {tour.thumbnail_url && <>
+          <Image
+            src={tour.thumbnail_url}
+            alt={tour.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        </>}
         <div className="absolute bottom-4 left-4">
           <Link
             href="/tours"
@@ -207,6 +224,7 @@ export default async function TourDetailPage({ params }: PageProps) {
             {tour.slug === 'hangang-healing-tour' && <RouteSection />}
             {tour.slug === 'ara-waterway-tour' && <AraRouteSection />}
             {tour.slug === 'haengju-fortress-tour' && <HaengjuRouteSection />}
+            {tour.slug === 'peace-nuri-1' && <PeaceNuriRouteSection />}
 
             {/* Highlights */}
             <section className="mt-8">

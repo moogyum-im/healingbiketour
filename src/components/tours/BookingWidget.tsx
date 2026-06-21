@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, Users, Minus, Plus, ShieldCheck, User, Bike, Gift, ArrowLeftRight, Clock } from 'lucide-react'
+import { Calendar, Users, Minus, Plus, User, Bike, Gift, ArrowLeftRight, Clock } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Tour } from '@/types'
 import Button from '@/components/ui/Button'
@@ -36,14 +36,6 @@ const ADDONS = [
     label_en: 'Expert English Guide',
     desc: '최대 10인 그룹, 영어 가능',
     price: 100000,
-  },
-  {
-    id: 'insurance',
-    icon: ShieldCheck,
-    label: '여행자 보험',
-    label_en: 'Travel Insurance',
-    desc: '최대 1억원 보상',
-    price: 9900,
   },
 ]
 
@@ -317,7 +309,6 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                     +{formatPrice(price)}
                   </p>
                   {id === 'guide' && <p className="text-[10px] text-zinc-400">그룹당</p>}
-                  {id === 'insurance' && <p className="text-[10px] text-zinc-400">1인당</p>}
                 </div>
               </button>
             ))}

@@ -243,3 +243,49 @@ export async function sendAdminNewBookingNotification(params: {
     `[힐링바이크투어 신규예약]\n예약번호: ${params.bookingNumber}\n투어: ${params.tourTitle}\n날짜: ${params.date}\n인원: ${params.participants}명\n금액: ${params.totalAmount.toLocaleString('ko-KR')}원\n고객: ${params.contactName} ${params.contactPhone}`,
   )
 }
+
+// ── 취소 요청 알림 (관리자에게) ────────────────────────────────
+export async function sendCancellationRequestedAdminNotification(params: {
+  bookingNumber: string
+  tourTitle: string
+  contactName: string
+  contactPhone: string
+  totalAmount: number
+  reason?: string
+}) {
+  const adminPhone = process.env.SOLAPI_ADMIN_PHONE
+  if (!adminPhone) return
+  await sendSms(
+    adminPhone,
+    `[힐링바이크투어 취소요청]\n예약번호: ${params.bookingNumber}\n투어: ${params.tourTitle}\n고객: ${params.contactName} ${params.contactPhone}\n금액: ${params.totalAmount.toLocaleString('ko-KR')}원${params.reason ? `\n사유: ${params.reason}` : ''}\n관리자 페이지에서 승인/거절해주세요.`,
+  )
+}
+
+// ── 취소 승인 알림 (고객에게) ──────────────────────────────────
+export async function sendCancellationApprovedNotification(params: {
+  phone: string
+  name: string
+  bookingNumber: string
+  tourTitle: string
+  refundAmount: number
+  refundPercentage: number
+}) {
+  const smsText = params.refundAmount > 0
+    ? `[힐링바이크투어] ${params.name}님, ${params.bookingNumber} 예약 취소가 승인되었습니다.\n환불금액: ${params.refundAmount.toLocaleString('ko-KR')}원 (${params.refundPercentage}%)\n카드사 정책에 따라 3~5영업일 내 처리됩니다.`
+    : `[힐링바이크투어] ${params.name}님, ${params.bookingNumber} 예약 취소가 승인되었습니다.\n환불 정책에 따라 환불금액이 없습니다. 문의: healingbiketour@gmail.com`
+  await sendSms(params.phone, smsText)
+}
+
+// ── 취소 거절 알림 (고객에게) ──────────────────────────────────
+export async function sendCancellationRejectedNotification(params: {
+  phone: string
+  name: string
+  bookingNumber: string
+  tourTitle: string
+  reason?: string
+}) {
+  await sendSms(
+    params.phone,
+    `[힐링바이크투어] ${params.name}님, ${params.bookingNumber} 취소 요청이 거절되었습니다.${params.reason ? `\n사유: ${params.reason}` : ''}\n문의: healingbiketour@gmail.com`,
+  )
+}

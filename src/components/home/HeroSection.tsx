@@ -44,7 +44,7 @@ export default function HeroSection() {
 
           {/* Bike type pills */}
           <div className="mt-6 flex flex-wrap gap-2">
-            {['🚲 City Bike', '🏔️ MTB', '⚡ E-Bike'].map((b) => (
+            {['🚲 로드자전거', '🏔️ MTB', '⚡ 전기자전거'].map((b) => (
               <span
                 key={b}
                 className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1.5 text-xs font-semibold text-zinc-300 backdrop-blur-sm"
@@ -54,7 +54,7 @@ export default function HeroSection() {
             ))}
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
               <Zap className="h-3 w-3" />
-              Choose your ride
+              자전거를 선택하세요
             </span>
           </div>
 

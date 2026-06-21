@@ -10,59 +10,17 @@ import Image from 'next/image'
 import { createBooking, confirmBooking, confirmBookingWithCredit } from '@/lib/actions/booking'
 import toast from 'react-hot-toast'
 import type { Tour } from '@/types'
+import { PAYMENT_LABEL_CARD, PAYMENT_LABEL_PAYPAL } from '@/lib/constants'
 
-// ── 결제수단 로고 SVG ───────────────────────────────────────
-function KakaoPayLogo() {
-  return (
-    <svg viewBox="0 0 60 24" fill="none" className="h-5 w-auto">
-      <rect width="60" height="24" rx="4" fill="#FEE500"/>
-      <text x="6" y="17" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="11" fill="#3A1D1D">kakao</text>
-      <text x="37" y="17" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="11" fill="#3A1D1D">pay</text>
-    </svg>
-  )
-}
-
-function NaverPayLogo() {
-  return (
-    <svg viewBox="0 0 72 24" fill="none" className="h-5 w-auto">
-      <rect width="72" height="24" rx="4" fill="#03C75A"/>
-      <text x="6" y="17" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="11" fill="#FFFFFF">NAVER</text>
-      <text x="44" y="17" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="11" fill="#FFFFFF">Pay</text>
-    </svg>
-  )
-}
-
-function CardLogo() {
-  return (
-    <svg viewBox="0 0 32 24" fill="none" className="h-5 w-auto">
-      <rect width="32" height="24" rx="3" fill="#1A1F71"/>
-      <rect y="6" width="32" height="5" fill="#F7B600"/>
-      <rect x="3" y="16" width="8" height="2" rx="1" fill="white" fillOpacity="0.7"/>
-      <rect x="13" y="16" width="5" height="2" rx="1" fill="white" fillOpacity="0.4"/>
-    </svg>
-  )
-}
-
-const PAYMENT_METHODS = [
-  {
-    id: 'kakaopay',
-    label: '카카오페이',
-    logo: <KakaoPayLogo />,
-    channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_KAKAOPAY,
-  },
-  {
-    id: 'naverpay',
-    label: '네이버페이',
-    logo: <NaverPayLogo />,
-    channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_NAVERPAY,
-  },
-  {
-    id: 'card',
-    label: '일반 결제',
-    logo: <CardLogo />,
-    channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD,
-  },
+const ALL_PAYMENT_METHODS = [
+  { ...PAYMENT_LABEL_CARD,   channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD,   currency: 'CURRENCY_KRW' as const },
+  { ...PAYMENT_LABEL_PAYPAL, channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_PAYPAL, currency: 'CURRENCY_USD' as const },
 ]
+
+// 채널키가 설정된 수단만 노출
+const PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter(
+  (m) => m.channelKey && !m.channelKey.startsWith('your_')
+)
 
 export default function BookingForm() {
   const searchParams = useSearchParams()
@@ -77,7 +35,7 @@ export default function BookingForm() {
   const [tourLoading, setTourLoading] = useState(true)
   const [resumeAmount, setResumeAmount] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<string>('kakaopay')
+  const [paymentMethod, setPaymentMethod] = useState<string>(PAYMENT_METHODS[0]?.id ?? 'card')
   const [selectedOptionId, setSelectedOptionId] = useState<string>('')
   const [form, setForm] = useState({ name: '', email: '', phone: '', requests: '' })
   const [creditBalance, setCreditBalance] = useState(0)
@@ -211,20 +169,34 @@ export default function BookingForm() {
       }
 
       const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod)
+      if (!selectedMethod?.channelKey) {
+        toast.error('결제 수단 채널키가 설정되지 않았습니다. 관리자에게 문의해 주세요.')
+        setLoading(false)
+        return
+      }
+      const isPayPal = paymentMethod === 'paypal'
+      // PayPal은 USD 센트 단위 (1 USD = 1,350 KRW 기준)
+      const payAmountUsd = Math.round((payAmount / 1350) * 100)
+
       const PortOne = await import('@portone/browser-sdk/v2')
       const response = await PortOne.requestPayment({
         storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
         channelKey: selectedMethod?.channelKey ?? '',
-        paymentId: `booking_${bookingId}${resumeId ? `_r${Date.now()}` : ''}`,
+        // KG 이니시스 oid 최대 40자 제한 — UUID 하이픈 제거 후 bk 접두사 사용 (34자)
+        // resume 재시도는 r + 압축 UUID 22자 + timestamp 7자 = 30자
+        paymentId: resumeId
+          ? `r${bookingId.replace(/-/g, '').slice(0, 22)}${Date.now().toString(36).slice(-7)}`
+          : `bk${bookingId.replace(/-/g, '')}`,
         orderName: tour.title,
-        totalAmount: payAmount,
-        currency: 'CURRENCY_KRW' as const,
-        payMethod: paymentMethod === 'card' ? 'CARD' : 'EASY_PAY',
+        totalAmount: isPayPal ? payAmountUsd : payAmount,
+        currency: isPayPal ? 'CURRENCY_USD' : 'CURRENCY_KRW',
+        payMethod: paymentMethod === 'card' ? 'CARD' : isPayPal ? 'PAYPAL' : 'EASY_PAY',
         customer: {
           fullName: form.name,
           email: form.email,
           phoneNumber: form.phone.replace(/-/g, ''),
         },
+        customData: { bookingId },
       })
 
       if (!response || response.code !== undefined) {
@@ -248,8 +220,8 @@ export default function BookingForm() {
       toast.success('결제가 완료되었습니다! 카카오톡 알림을 확인해주세요.')
       router.push('/my?booked=success')
     } catch (err) {
-      console.error(err)
-      toast.error('결제 처리 중 오류가 발생했습니다.')
+      console.error('[BookingForm] 결제 오류:', err)
+      toast.error(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
@@ -416,7 +388,7 @@ export default function BookingForm() {
               {PAYMENT_METHODS.map((method) => (
                 <label
                   key={method.id}
-                  className={`flex items-center gap-4 cursor-pointer rounded-xl border-2 p-4 transition-all ${
+                  className={`flex items-start gap-4 cursor-pointer rounded-xl border-2 p-4 transition-all ${
                     paymentMethod === method.id
                       ? 'border-emerald-500 bg-emerald-50'
                       : 'border-zinc-200 hover:border-zinc-300 bg-white'
@@ -428,12 +400,14 @@ export default function BookingForm() {
                     value={method.id}
                     checked={paymentMethod === method.id}
                     onChange={() => setPaymentMethod(method.id)}
-                    className="accent-emerald-600"
+                    className="mt-0.5 accent-emerald-600"
                   />
-                  {method.logo}
-                  <span className={`text-sm font-semibold ${paymentMethod === method.id ? 'text-emerald-800' : 'text-zinc-700'}`}>
-                    {method.label}
-                  </span>
+                  <div>
+                    <p className={`text-sm font-bold ${paymentMethod === method.id ? 'text-emerald-800' : 'text-zinc-800'}`}>
+                      {method.label}
+                    </p>
+                    <p className="text-xs text-zinc-400 mt-0.5">{method.sublabel}</p>
+                  </div>
                 </label>
               ))}
             </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bike, LayoutDashboard, Map, CalendarDays, Users, MessageSquare, LogOut, ChevronRight, Gift, MessageCircle, Megaphone, HelpCircle, UserCheck, TrendingUp } from 'lucide-react'
+import { Bike, LayoutDashboard, Map, CalendarDays, Users, MessageSquare, LogOut, ChevronRight, Gift, MessageCircle, Megaphone, HelpCircle, UserCheck, TrendingUp, KeyRound } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
@@ -20,7 +20,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const navItems = [
     { href: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
     { href: '/admin/tours', label: '투어 관리', icon: Map },
-    { href: '/admin/bookings', label: '예약 관리', icon: CalendarDays },
+    { href: '/admin/bookings', label: '투어 예약 관리', icon: CalendarDays },
+    { href: '/admin/rental-bookings', label: '렌탈 예약 관리', icon: KeyRound },
+    { href: '/admin/rental-availability', label: '렌탈 수량 관리', icon: Bike },
     { href: '/admin/sales', label: '매출 관리', icon: TrendingUp },
     { href: '/admin/users', label: '회원 관리', icon: Users },
     { href: '/admin/reviews', label: '리뷰 관리', icon: MessageSquare },

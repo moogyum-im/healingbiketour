@@ -1,5 +1,5 @@
 import HeroSection from '@/components/home/HeroSection'
-import CategorySection from '@/components/home/CategorySection'
+import RentalCarousel from '@/components/home/RentalCarousel'
 import FeaturedTours from '@/components/home/FeaturedTours'
 import ReviewSection from '@/components/home/ReviewSection'
 import VideoHighlightSection from '@/components/home/VideoHighlightSection'
@@ -15,34 +15,21 @@ export default async function HomePage() {
   const featuredTours = allTours.filter((t) => t.is_active).slice(0, 3)
 
   const features = [
-    {
-      icon: Award,
-      title: t('whyus.expert_title'),
-      description: t('whyus.expert_desc'),
-    },
-    {
-      icon: Bike,
-      title: t('whyus.bikes_title'),
-      description: t('whyus.bikes_desc'),
-    },
-    {
-      icon: Film,
-      title: t('whyus.video_title'),
-      description: t('whyus.video_desc'),
-    },
+    { icon: Award, title: t('whyus.expert_title'), description: t('whyus.expert_desc') },
+    { icon: Bike,  title: t('whyus.bikes_title'),  description: t('whyus.bikes_desc') },
+    { icon: Film,  title: t('whyus.video_title'),  description: t('whyus.video_desc') },
   ]
 
   return (
     <>
       <HeroSection />
-      <CategorySection />
+      <RentalCarousel />
       <FeaturedTours tours={featuredTours} />
 
       {/* Expert Guide */}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
-            {/* 인증서 3장 */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { year: '2013', title: '국토종주 완주 인증', color: 'emerald', img: '/cert-2013-national.jpeg' },
@@ -60,7 +47,7 @@ export default async function HomePage() {
                     />
                     <span className={`absolute top-2 left-2 text-xs font-black px-2 py-0.5 rounded-full shadow-sm ${
                       cert.color === 'emerald' ? 'bg-emerald-500 text-white' :
-                      cert.color === 'blue' ? 'bg-blue-500 text-white' :
+                      cert.color === 'blue'    ? 'bg-blue-500 text-white' :
                       'bg-amber-500 text-white'
                     }`}>{cert.year}</span>
                   </div>
@@ -68,7 +55,6 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-            {/* 텍스트 */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">EXPERT GUIDE</p>
               <h2 className="text-3xl font-black text-zinc-900 sm:text-4xl">
@@ -119,24 +105,20 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_theme(colors.emerald.400/30),_transparent_60%)]" />
         <div className="relative mx-auto max-w-3xl px-4 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-200 mb-3">Han River</p>
-          <h2 className="text-4xl font-black text-white sm:text-5xl">
-            {t('cta.title')}
-          </h2>
-          <p className="mt-4 text-emerald-100 text-lg">
-            {t('cta.subtitle')}
-          </p>
+          <h2 className="text-4xl font-black text-white sm:text-5xl">{t('cta.title')}</h2>
+          <p className="mt-4 text-emerald-100 text-lg">{t('cta.subtitle')}</p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/tours"
               className="w-full sm:w-auto rounded-xl bg-white px-8 py-4 text-base font-bold text-emerald-700 shadow-lg transition-all hover:bg-zinc-50 hover:scale-[1.02] active:scale-[0.98]"
             >
-              {t('cta.browse')}
+              투어 예약하기
             </Link>
             <Link
-              href="/auth/signup"
+              href="/rental"
               className="w-full sm:w-auto rounded-xl border-2 border-white/50 px-8 py-4 text-base font-bold text-white transition-all hover:bg-white/10 hover:border-white hover:scale-[1.02] active:scale-[0.98]"
             >
-              {t('cta.signup')}
+              자전거 렌탈하기
             </Link>
           </div>
         </div>

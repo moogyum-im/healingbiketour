@@ -82,7 +82,7 @@ export default function Footer() {
         <div className="mt-10 border-t border-zinc-800 pt-8 text-xs text-zinc-600 space-y-1.5">
           <p>상호: 주식회사 힐링바이크투어 &nbsp;|&nbsp; 대표자: 이상호 &nbsp;|&nbsp; 사업자등록번호: 860-86-04061</p>
           <p>사업장 소재지: 서울특별시 영등포구 당산로50길 11, 102호(당산동6가, 당산빌) &nbsp;|&nbsp; 이메일: healingbiketour@gmail.com</p>
-          <p>통신판매업신고번호: 제2026-서울영등포-XXXX호 &nbsp;|&nbsp; 여행사업 등록 영등포구</p>
+          <p>통신판매업신고번호: 제2026-서울영등포-1384호 &nbsp;|&nbsp; 여행사업 등록 영등포구</p>
           <p className="pt-1 text-zinc-700">© 2026 주식회사 힐링바이크투어. All rights reserved.</p>
         </div>
       </div>

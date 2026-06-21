@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown, Zap, Mountain, Bike, Wind } from 'lucide-react'
+import { ChevronDown, Zap, Mountain, Bike, Wind, Tag } from 'lucide-react'
 import type { Metadata } from 'next'
+import { RENTAL_PRICES, type BikeRentalPrice } from '@/lib/rental-prices'
 
 export const metadata: Metadata = {
   title: '자전거 소개',
@@ -22,6 +23,33 @@ interface BikeData {
   specs: BikeSpec[]
   for: string
   category?: string
+}
+
+const FMT = new Intl.NumberFormat('ko-KR')
+
+function RentalPriceBadge({ rental }: { rental: BikeRentalPrice }) {
+  return (
+    <div className="mt-5 rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3">
+      <p className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 mb-2">
+        <Tag className="h-3.5 w-3.5" />
+        렌탈 단가 (1대 / 1일)
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-lg bg-white border border-zinc-200 py-1.5">
+          <p className="text-[10px] text-zinc-400 font-medium">24시간 / 1일</p>
+          <p className="text-sm font-black text-zinc-800">{FMT.format(rental.day12)}<span className="text-[10px] font-semibold text-zinc-400">원</span></p>
+        </div>
+        <div className="rounded-lg bg-white border border-zinc-200 py-1.5">
+          <p className="text-[10px] text-zinc-400 font-medium">48시간 / 2일</p>
+          <p className="text-sm font-black text-zinc-800">{FMT.format(rental.day12)}<span className="text-[10px] font-semibold text-zinc-400">원</span></p>
+        </div>
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 py-1.5">
+          <p className="text-[10px] text-emerald-600 font-medium">72시간 / 3일</p>
+          <p className="text-sm font-black text-emerald-700">{FMT.format(rental.day34)}<span className="text-[10px] font-semibold text-emerald-500">원</span></p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const ROAD_BIKES: BikeData[] = [
@@ -271,6 +299,7 @@ const CATEGORIES = [
 ]
 
 function BikeCard({ bike, idx, categoryLabel }: { bike: BikeData; idx: number; categoryLabel: string }) {
+  const rentalPrice = RENTAL_PRICES.find((r) => r.bikeId === bike.id)
   const isEven = idx % 2 === 0
   return (
     <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
@@ -309,22 +338,37 @@ function BikeCard({ bike, idx, categoryLabel }: { bike: BikeData; idx: number; c
 
             <p className="mt-4 text-xs font-bold text-zinc-400 uppercase tracking-wider">이런 분께 추천</p>
             <p className="mt-1 text-sm text-zinc-600">{bike.for}</p>
+
           </div>
 
-          <details className="group mt-6">
-            <summary className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm font-bold text-zinc-700 select-none hover:bg-zinc-100 transition-colors">
-              스펙 보기
-              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-            </summary>
-            <div className="mt-2 rounded-xl border border-zinc-200 overflow-hidden">
-              {bike.specs.map(({ label, value }, i) => (
-                <div key={label} className={`flex items-center justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-zinc-50'}`}>
-                  <span className="font-semibold text-zinc-500">{label}</span>
-                  <span className="font-bold text-zinc-800">{value}</span>
+          <div className="mt-6 space-y-2">
+            <details className="group">
+              <summary className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-50 px-4 py-3 text-sm font-bold text-zinc-700 select-none hover:bg-zinc-100 transition-colors">
+                스펙 보기
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="mt-2 rounded-xl border border-zinc-200 overflow-hidden">
+                {bike.specs.map(({ label, value }, i) => (
+                  <div key={label} className={`flex items-center justify-between px-4 py-2.5 text-sm ${i % 2 === 0 ? 'bg-white' : 'bg-zinc-50'}`}>
+                    <span className="font-semibold text-zinc-500">{label}</span>
+                    <span className="font-bold text-zinc-800">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            {rentalPrice && (
+              <details className="group">
+                <summary className="flex cursor-pointer items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 select-none hover:bg-emerald-100 transition-colors">
+                  렌탈 단가 보기
+                  <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="mt-2">
+                  <RentalPriceBadge rental={rentalPrice} />
                 </div>
-              ))}
-            </div>
-          </details>
+              </details>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -378,13 +422,21 @@ export default function BikesPage() {
       {/* CTA */}
       <section className="py-16 bg-zinc-50 text-center">
         <p className="text-zinc-500 mb-2">어떤 자전거든 블랙박스 장착 + 투어 영상 기본 제공</p>
-        <h3 className="text-2xl font-black text-zinc-900 mb-6">마음에 드는 자전거를 골랐다면 투어 예약하러 가요</h3>
-        <Link
-          href="/tours"
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-emerald-500 hover:scale-[1.02]"
-        >
-          투어 예약하기 →
-        </Link>
+        <h3 className="text-2xl font-black text-zinc-900 mb-6">마음에 드는 자전거를 골랐다면</h3>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link
+            href="/tours"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-8 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-emerald-500 hover:scale-[1.02]"
+          >
+            투어 예약하기 →
+          </Link>
+          <Link
+            href="/rental"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-emerald-600 px-8 py-4 text-sm font-bold text-emerald-600 transition-all hover:bg-emerald-50 hover:scale-[1.02]"
+          >
+            렌탈 예약하기 →
+          </Link>
+        </div>
       </section>
     </div>
   )

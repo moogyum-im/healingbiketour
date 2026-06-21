@@ -11,10 +11,11 @@ import ResumePaymentButton from './ResumePaymentButton'
 export const metadata = { title: '나의 예약' }
 
 const statusConfig: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'default' }> = {
-  confirmed:  { label: '예약 확정',  variant: 'success' },
-  pending:    { label: '결제 대기',  variant: 'warning' },
-  cancelled:  { label: '취소됨',    variant: 'danger' },
-  completed:  { label: '완료',      variant: 'default' },
+  confirmed:        { label: '예약 확정',   variant: 'success' },
+  pending:          { label: '결제 대기',   variant: 'warning' },
+  cancelled:        { label: '취소됨',     variant: 'danger' },
+  completed:        { label: '완료',       variant: 'default' },
+  cancel_requested: { label: '취소 요청 중', variant: 'warning' },
 }
 
 async function BookingSuccessToast({ show }: { show: boolean }) {
@@ -126,6 +127,11 @@ export default async function MyBookingsPage({ searchParams }: PageProps) {
                         <Suspense>
                           <CancelBookingButton bookingId={booking.id} />
                         </Suspense>
+                      )}
+                      {booking.status === 'cancel_requested' && (
+                        <span className="rounded-lg bg-orange-100 px-3 py-1.5 text-xs font-semibold text-orange-700">
+                          취소 검토 중
+                        </span>
                       )}
                       {(booking.status === 'completed' || booking.status === 'confirmed') && (
                         <Link href={`/my/reviews/write?booking=${booking.id}&tour=${tour?.id ?? ''}&title=${encodeURIComponent(tour?.title ?? '')}`}>

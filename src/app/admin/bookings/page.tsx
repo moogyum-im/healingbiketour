@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import BookingStatusSelect from './BookingStatusSelect'
+import CancellationButtons from './CancellationButtons'
+import { calcRefundPercentageFromDate } from '@/lib/utils/refund'
 
 export const metadata = { title: '예약 관리 | 관리자' }
 
@@ -8,10 +10,11 @@ interface PageProps {
 }
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
-  confirmed: { label: '확정',   cls: 'bg-emerald-100 text-emerald-700' },
-  pending:   { label: '대기',   cls: 'bg-amber-100 text-amber-700' },
-  cancelled: { label: '취소',   cls: 'bg-red-100 text-red-700' },
-  completed: { label: '완료',   cls: 'bg-zinc-100 text-zinc-700' },
+  confirmed:        { label: '확정',      cls: 'bg-emerald-100 text-emerald-700' },
+  pending:          { label: '대기',      cls: 'bg-amber-100 text-amber-700' },
+  cancelled:        { label: '취소',      cls: 'bg-red-100 text-red-700' },
+  completed:        { label: '완료',      cls: 'bg-zinc-100 text-zinc-700' },
+  cancel_requested: { label: '취소요청', cls: 'bg-orange-100 text-orange-700' },
 }
 
 export default async function AdminBookingsPage({ searchParams }: PageProps) {
@@ -23,6 +26,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
     .select(`
       id, booking_number, status, participants, total_amount_krw,
       contact_name, contact_email, contact_phone, created_at,
+      cancellation_reason, cancellation_requested_at,
       tours ( title ),
       tour_dates ( date, start_time ),
       payments ( status, payment_method )
@@ -75,6 +79,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
           className="rounded-xl border border-zinc-300 px-3.5 py-2 text-sm focus:border-emerald-500 focus:outline-none"
         >
           <option value="all">전체 상태</option>
+          <option value="cancel_requested">취소 요청</option>
           <option value="pending">결제 대기</option>
           <option value="confirmed">예약 확정</option>
           <option value="completed">완료</option>
@@ -111,13 +116,19 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                 const tourDate = (booking as any).tour_dates
                 const payment = (booking as any).payments?.[0]
 
+                const isCancelRequested = booking.status === 'cancel_requested'
+                const suggestedPct = calcRefundPercentageFromDate(tourDate?.date)
+
                 return (
-                  <tr key={booking.id} className="hover:bg-zinc-50 transition-colors">
+                  <tr key={booking.id} className={`hover:bg-zinc-50 transition-colors ${isCancelRequested ? 'bg-orange-50' : ''}`}>
                     <td className="px-5 py-3.5">
                       <p className="font-mono text-xs text-zinc-700">{booking.booking_number}</p>
                       <p className="text-xs text-zinc-400 mt-0.5">
                         {new Date(booking.created_at).toLocaleDateString('ko-KR')}
                       </p>
+                      {isCancelRequested && (booking as any).cancellation_reason && (
+                        <p className="text-xs text-orange-600 mt-1">사유: {(booking as any).cancellation_reason}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="font-medium text-zinc-900 max-w-[160px] truncate">{tour?.title ?? '-'}</p>
@@ -147,10 +158,18 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      <BookingStatusSelect
-                        bookingId={booking.id}
-                        currentStatus={booking.status}
-                      />
+                      {isCancelRequested ? (
+                        <CancellationButtons
+                          bookingId={booking.id}
+                          totalAmount={booking.total_amount_krw}
+                          suggestedPercentage={suggestedPct}
+                        />
+                      ) : (
+                        <BookingStatusSelect
+                          bookingId={booking.id}
+                          currentStatus={booking.status}
+                        />
+                      )}
                     </td>
                   </tr>
                 )

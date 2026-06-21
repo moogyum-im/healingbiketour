@@ -7,7 +7,11 @@ import {
   sendBookingConfirmedNotification,
   sendBookingCancelledNotification,
   sendAdminNewBookingNotification,
+  sendCancellationRequestedAdminNotification,
+  sendCancellationApprovedNotification,
+  sendCancellationRejectedNotification,
 } from '@/lib/notify/kakao'
+import { calcRefundPercentageFromDate } from '@/lib/utils/refund'
 
 export interface CreateBookingInput {
   tourId: string
@@ -146,6 +150,19 @@ export async function confirmBooking(bookingId: string, paymentData: {
 
   const creditAmount = paymentData.creditAmount ?? 0
   const paidAmount = booking.total_amount_krw - creditAmount
+
+  // PortOne V2 결제 검증
+  if (paidAmount > 0) {
+    const portoneRes = await fetch(
+      `https://api.portone.io/payments/${encodeURIComponent(paymentData.paymentId)}`,
+      { headers: { Authorization: `PortOne ${process.env.PORTONE_API_SECRET}` } }
+    )
+    if (!portoneRes.ok) return { error: '결제 정보를 확인할 수 없습니다.' }
+    const payment = await portoneRes.json()
+    if (payment.status !== 'PAID') return { error: '결제가 완료되지 않았습니다.' }
+    if (payment.amount.total !== paidAmount) return { error: '결제 금액이 일치하지 않습니다.' }
+  }
+
   const tourDate = (booking as any).tour_dates
   const dateLabel = tourDate?.date
     ? new Date(tourDate.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -299,4 +316,171 @@ export async function cancelBooking(bookingId: string) {
   revalidatePath('/my/bookings')
   revalidatePath('/my')
   return { success: true }
+}
+
+// ── 취소 요청 (고객) ───────────────────────────────────────────
+export async function requestCancellation(bookingId: string, reason?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '로그인이 필요합니다.' }
+
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('booking_number, contact_name, contact_phone, total_amount_krw, tours(title)')
+    .eq('id', bookingId)
+    .eq('user_id', user.id)
+    .eq('status', 'confirmed')
+    .single()
+
+  if (!booking) return { error: '취소 요청할 수 없는 예약입니다.' }
+
+  const { error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'cancel_requested',
+      cancellation_reason: reason ?? null,
+      cancellation_requested_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', bookingId)
+
+  if (error) return { error: '취소 요청에 실패했습니다.' }
+
+  await sendCancellationRequestedAdminNotification({
+    bookingNumber: booking.booking_number,
+    tourTitle: (booking as any).tours?.title ?? '',
+    contactName: booking.contact_name,
+    contactPhone: booking.contact_phone,
+    totalAmount: booking.total_amount_krw,
+    reason,
+  }).catch(console.error)
+
+  revalidatePath('/my/bookings')
+  revalidatePath('/my')
+  return { success: true }
+}
+
+// ── 취소 승인 (관리자) — PortOne 환불 API 호출 ─────────────────
+export async function approveCancellation(bookingId: string, refundPercentage: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '권한이 없습니다.' }
+
+  const { data: role } = await supabase.rpc('get_my_role')
+  if (role !== 'admin') return { error: '관리자만 사용 가능합니다.' }
+
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select(`
+      id, booking_number, status, total_amount_krw,
+      contact_name, contact_phone, cancellation_reason,
+      tours(title),
+      tour_dates(date),
+      payments(portone_payment_id, amount_krw, payment_method)
+    `)
+    .eq('id', bookingId)
+    .single()
+
+  if (!booking || booking.status !== 'cancel_requested') return { error: '취소 요청 상태가 아닙니다.' }
+
+  const payments: any[] = (booking as any).payments ?? []
+  const payment = payments[0]
+  const refundAmount = Math.round(booking.total_amount_krw * refundPercentage / 100)
+
+  // PortOne 결제건이면 환불 API 호출
+  if (payment?.portone_payment_id && !payment.portone_payment_id.startsWith('credit_') && refundAmount > 0) {
+    const body: Record<string, unknown> = { reason: '고객 요청 취소' }
+    if (refundAmount < (payment.amount_krw ?? booking.total_amount_krw)) {
+      body.amount = refundAmount
+    }
+    const portoneRes = await fetch(
+      `https://api.portone.io/payments/${encodeURIComponent(payment.portone_payment_id)}/cancel`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `PortOne ${process.env.PORTONE_API_SECRET}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    )
+    if (!portoneRes.ok) {
+      const err = await portoneRes.json().catch(() => ({}))
+      return { error: `PortOne 환불 실패: ${(err as any).message ?? portoneRes.status}` }
+    }
+  }
+
+  await supabase.from('bookings').update({
+    status: 'cancelled',
+    refund_amount_krw: refundAmount,
+    refund_percentage: refundPercentage,
+    updated_at: new Date().toISOString(),
+  }).eq('id', bookingId)
+
+  await supabase.from('payments').update({ status: 'refunded' }).eq('booking_id', bookingId)
+
+  await sendCancellationApprovedNotification({
+    phone: booking.contact_phone,
+    name: booking.contact_name,
+    bookingNumber: booking.booking_number,
+    tourTitle: (booking as any).tours?.title ?? '',
+    refundAmount,
+    refundPercentage,
+  }).catch(console.error)
+
+  revalidatePath('/admin/bookings')
+  revalidatePath('/my/bookings')
+  return { success: true, refundAmount, refundPercentage }
+}
+
+// ── 취소 거절 (관리자) ─────────────────────────────────────────
+export async function rejectCancellation(bookingId: string, reason?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '권한이 없습니다.' }
+
+  const { data: role } = await supabase.rpc('get_my_role')
+  if (role !== 'admin') return { error: '관리자만 사용 가능합니다.' }
+
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('booking_number, contact_name, contact_phone, status, tours(title)')
+    .eq('id', bookingId)
+    .single()
+
+  if (!booking || booking.status !== 'cancel_requested') return { error: '취소 요청 상태가 아닙니다.' }
+
+  await supabase.from('bookings').update({
+    status: 'confirmed',
+    cancellation_reason: null,
+    cancellation_requested_at: null,
+    updated_at: new Date().toISOString(),
+  }).eq('id', bookingId)
+
+  await sendCancellationRejectedNotification({
+    phone: booking.contact_phone,
+    name: booking.contact_name,
+    bookingNumber: booking.booking_number,
+    tourTitle: (booking as any).tours?.title ?? '',
+    reason,
+  }).catch(console.error)
+
+  revalidatePath('/admin/bookings')
+  revalidatePath('/my/bookings')
+  return { success: true }
+}
+
+// ── 취소 요청 시 환불 예상 % 계산 헬퍼 (서버 액션) ───────────────
+export async function getExpectedRefundPercentage(bookingId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('bookings')
+    .select('total_amount_krw, tour_dates(date)')
+    .eq('id', bookingId)
+    .single()
+
+  if (!data) return { percentage: 0, amount: 0 }
+  const tourDate = (data as any).tour_dates?.date
+  const percentage = calcRefundPercentageFromDate(tourDate)
+  return { percentage, amount: Math.round(data.total_amount_krw * percentage / 100) }
 }

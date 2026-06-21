@@ -12,8 +12,9 @@ export default function FeaturedTours({ tours }: FeaturedToursProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-10">
           <div>
-            <h2 className="text-3xl font-bold text-zinc-900">인기 투어</h2>
-            <p className="mt-2 text-zinc-500">지금 가장 많이 찾는 투어를 만나보세요</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-2">Guided Tours</p>
+            <h2 className="text-3xl font-black text-zinc-900">투어 예약하기</h2>
+            <p className="mt-2 text-zinc-500">전문 가이드와 함께하는 한강 자전거 투어</p>
           </div>
           <Link
             href="/tours"

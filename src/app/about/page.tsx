@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Bike, MapPin, Shield, Heart, Users, Star, Mail, ExternalLink } from 'lucide-react'
+import { Bike, MapPin, Shield, Heart, Users, Star, Mail, KeyRound, ArrowRight } from 'lucide-react'
 
 export const metadata = { title: '회사 소개 | 힐링바이크투어' }
 
@@ -71,21 +71,21 @@ export default function AboutPage() {
         <div className="mx-auto max-w-4xl px-6 text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-sm">
             <Bike className="h-4 w-4" />
-            자전거 전문 가이드 투어 서비스
+            가이드 투어 · 자전거 렌탈 서비스
           </div>
           <h1 className="text-4xl font-black leading-tight sm:text-5xl">
             페달을 밟을수록<br />깊어지는 대한민국의 아름다움
           </h1>
           <p className="mt-6 text-lg text-emerald-100 leading-relaxed max-w-2xl mx-auto">
-            힐링바이크투어는 자전거를 가장 잘 아는 전문가들이 대한민국 곳곳의 아름다운 자연과 문화를
-            더 많은 분들과 나누기 위해 만든 프리미엄 가이드 투어 서비스입니다.
+            힐링바이크투어는 전문 가이드 자전거 투어와 프리미엄 자전거 렌탈 서비스를 함께 제공합니다.
+            직접 달리며 검증한 코스, 정비된 고급 자전거로 대한민국의 아름다움을 안전하게 경험하세요.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link href="/tours" className="rounded-2xl bg-white px-6 py-3 text-sm font-bold text-emerald-800 shadow hover:bg-emerald-50 transition-colors">
               투어 둘러보기
             </Link>
-            <Link href="/booking" className="rounded-2xl border border-white/40 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors">
-              바로 예약하기
+            <Link href="/rental" className="rounded-2xl border border-white/40 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors">
+              렌탈 예약하기
             </Link>
           </div>
         </div>
@@ -111,23 +111,84 @@ export default function AboutPage() {
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">OUR STORY</p>
-              <h2 className="text-3xl font-black text-zinc-900">자전거 전문가들이 만든<br />대한민국 라이딩 투어</h2>
+              <h2 className="text-3xl font-black text-zinc-900">자전거 전문가들이 만든<br />투어와 렌탈 서비스</h2>
               <div className="mt-6 space-y-4 text-zinc-600 leading-relaxed">
                 <p>
                   힐링바이크투어는 오랜 시간 대한민국의 산과 강, 해안과 도심을 달려온 자전거 전문가들이
-                  그 아름다움을 더 많은 분들과 나누고 싶다는 열정으로 설립한 투어 회사입니다.
+                  그 아름다움을 더 많은 분들과 나누고 싶다는 열정으로 설립한 회사입니다.
                 </p>
                 <p>
-                  자전거를 처음 타는 분부터 경험 많은 라이더까지, 각자의 속도와 목적에 맞게 설계된 코스를 통해
-                  누구나 안전하고 즐겁게 대한민국의 아름다운 풍경 속을 달릴 수 있습니다.
+                  전문 가이드가 동행하는 가이드 투어와, 검증된 고급 자전거를 직접 빌려 자유롭게 즐기는
+                  렌탈 서비스 — 두 가지 방식으로 한강과 대한민국 자전거길의 아름다움을 경험할 수 있습니다.
                 </p>
                 <p>
-                  서울에서 시작해 전국으로 뻗어가는 힐링바이크투어와 함께, 자전거 위에서 만나는 새로운 대한민국을 경험해보세요.
+                  자전거를 처음 타는 분부터 경험 많은 라이더까지, 각자의 속도와 목적에 맞게 선택하세요.
                 </p>
               </div>
             </div>
             <div className="relative h-64 overflow-hidden rounded-3xl bg-zinc-100 md:h-80">
               <Image src="/메인-사진.jpg" alt="힐링바이크투어" fill className="object-cover" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 서비스 소개 */}
+      <section className="bg-zinc-50 py-16">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-3">SERVICES</p>
+            <h2 className="text-3xl font-black text-zinc-900">두 가지 방식으로 즐기세요</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* 가이드 투어 */}
+            <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-emerald-600 px-6 py-5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 mb-3">
+                  <Bike className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-black text-white">가이드 투어</h3>
+                <p className="text-emerald-100 text-sm mt-1">전문 가이드와 함께하는 라이딩</p>
+              </div>
+              <div className="p-6 flex-1 flex flex-col">
+                <ul className="space-y-2.5 text-sm text-zinc-600">
+                  {['한강·아라뱃길·행주산성 코스 운영', '전문 가이드 1:1 동행', '자전거·헬멧 등 장비 일체 포함', '초보자부터 중급자까지 맞춤 코스'].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/tours"
+                  className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
+                  투어 둘러보기 <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* 자전거 렌탈 */}
+            <div className="rounded-2xl bg-white border border-zinc-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-zinc-900 px-6 py-5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 mb-3">
+                  <KeyRound className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-xl font-black text-white">자전거 렌탈</h3>
+                <p className="text-zinc-400 text-sm mt-1">내 페이스대로 자유롭게</p>
+              </div>
+              <div className="p-6 flex-1 flex flex-col">
+                <ul className="space-y-2.5 text-sm text-zinc-600">
+                  {['MTB·로드 등 10종 프리미엄 자전거', '24시간 · 48시간 · 72시간 선택', '헬멧·자물쇠·펌프·거치대 무상', '카카오페이·토스·계좌이체 결제'].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/rental"
+                  className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-zinc-900 py-3 text-sm font-bold text-white hover:bg-zinc-700 transition-colors">
+                  렌탈 예약하기 <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -218,7 +279,7 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <p className="font-bold text-zinc-900">집합 장소</p>
-                  <p className="mt-1 text-sm text-zinc-600">당산역 2번 출구 앞</p>
+                  <p className="mt-1 text-sm text-zinc-600">당산역 4번 출구 앞</p>
                   <p className="text-xs text-zinc-400 mt-0.5">서울특별시 영등포구 당산로50길 11</p>
                 </div>
               </div>
@@ -228,7 +289,7 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <p className="font-bold text-zinc-900">지하철</p>
-                  <p className="mt-1 text-sm text-zinc-600">2호선·9호선 당산역 2번 출구 도보 1분</p>
+                  <p className="mt-1 text-sm text-zinc-600">2호선·9호선 당산역 4번 출구 도보 1분</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -242,9 +303,19 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-2xl overflow-hidden border border-zinc-200 shadow-sm bg-zinc-200 flex items-center justify-center min-h-[220px]">
+            <div className="relative rounded-2xl overflow-hidden border border-zinc-200 shadow-sm bg-zinc-200 min-h-[220px]">
+              {/* 커스텀 비즈니스 라벨 */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-xl bg-white shadow-lg px-3 py-2 pointer-events-none">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600">
+                  <Bike className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-zinc-900 leading-none">힐링바이크투어</p>
+                  <p className="text-[10px] text-zinc-400 mt-0.5 leading-none">당산로50길 11 · 당산역 4번 출구</p>
+                </div>
+              </div>
               <iframe
-                src="https://maps.google.com/maps?q=서울특별시+영등포구+당산역+2번출구&output=embed"
+                src="https://maps.google.com/maps?q=서울특별시+영등포구+당산로50길+11&output=embed&hl=ko"
                 width="100%"
                 height="280"
                 style={{ border: 0 }}
@@ -272,6 +343,7 @@ export default function AboutPage() {
               { label: '개업일', value: '2026년 05월 01일' },
               { label: '업태', value: '사업시설 관리, 사업지원 및 임대 서비스업' },
               { label: '종목', value: '여행사업, 스포츠 및 레크리에이션 용품 임대업' },
+              { label: '통신판매업신고', value: '제2026-서울영등포-1384호' },
               { label: '이메일', value: 'healingbiketour@gmail.com' },
             ].map(({ label, value }, i) => (
               <div key={label} className={`flex gap-6 px-6 py-4 ${i % 2 === 0 ? 'bg-zinc-50' : 'bg-white'}`}>
@@ -291,7 +363,7 @@ export default function AboutPage() {
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-300 mb-3">CONTACT</p>
               <h2 className="text-3xl font-black">궁금한 점이 있으신가요?</h2>
               <p className="mt-4 text-emerald-100 leading-relaxed">
-                투어 예약부터 코스 상세 문의까지, 언제든지 편하게 연락주세요.
+                투어 예약, 자전거 렌탈 문의, 코스 상세 질문까지 언제든지 편하게 연락주세요.
                 실시간 채팅 상담도 가능합니다.
               </p>
             </div>
@@ -311,7 +383,7 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <p className="text-xs text-emerald-300">집합 장소</p>
-                  <p className="font-semibold">당산역 2번 출구 앞 (서울 영등포구)</p>
+                  <p className="font-semibold">당산역 4번 출구 앞 (서울 영등포구)</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 rounded-2xl bg-white/10 px-5 py-4 backdrop-blur-sm">
