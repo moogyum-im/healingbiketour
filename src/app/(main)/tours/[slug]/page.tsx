@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import { getLocale } from 'next-intl/server'
 import {
   Clock,
   Route,
@@ -13,6 +14,7 @@ import {
   ChevronLeft,
 } from 'lucide-react'
 import { mockTours } from '@/lib/mock-data'
+import { localizeTour } from '@/lib/tour-i18n'
 import Badge from '@/components/ui/Badge'
 import BookingWidget from '@/components/tours/BookingWidget'
 import TourLegalSection from '@/components/tours/TourLegalSection'
@@ -111,9 +113,12 @@ export default async function TourDetailPage({ params }: PageProps) {
   // 비활성 투어 404
   if (dbTour?.is_active === false) notFound()
 
-  const tour: TourType = dbTour
+  const rawTour: TourType = dbTour
     ? buildTour(dbTour as Record<string, unknown>, mockTour)
     : mockTour!
+
+  const locale = await getLocale()
+  const tour = localizeTour(rawTour, locale)
 
   // DB tour의 실제 UUID (리뷰 조회에 사용)
   const tourDbId = dbTour?.id ?? mockTour!.id

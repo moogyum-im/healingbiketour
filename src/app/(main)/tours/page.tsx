@@ -2,9 +2,11 @@ import { Suspense } from 'react'
 import TourCard from '@/components/tours/TourCard'
 import TourFilters from '@/components/tours/TourFilters'
 import { getToursWithOverrides } from '@/lib/tours'
+import { localizeTour } from '@/lib/tour-i18n'
 import type { TourCategory, TourDifficulty } from '@/types'
 import { getCategoryLabel } from '@/utils/format'
 import AdminAddTourButton from '@/components/tours/AdminAddTourButton'
+import { getLocale } from 'next-intl/server'
 
 interface ToursPageProps {
   searchParams: Promise<{
@@ -24,9 +26,10 @@ export const metadata = {
 export default async function ToursPage({ searchParams }: ToursPageProps) {
   const params = await searchParams
   const { category, difficulty, search, minPrice, maxPrice } = params
+  const locale = await getLocale()
 
   // 필터 적용
-  const allTours = await getToursWithOverrides()
+  const allTours = (await getToursWithOverrides()).map((t) => localizeTour(t, locale))
   let filtered = allTours.filter((t) => t.is_active)
 
   if (category) filtered = filtered.filter((t) => t.category === category)

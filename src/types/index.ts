@@ -25,6 +25,7 @@ export interface Tour {
   requirements: string[]
   highlights: string[]
   options?: TourOption[]
+  translations?: Partial<Record<string, Partial<TourTranslation>>>
   sort_order?: number
   rating: number
   review_count: number
@@ -43,6 +44,17 @@ export type TourCategory =
   | 'national'  // 국토종주
 
 export type TourDifficulty = 'easy' | 'moderate' | 'hard'
+
+export interface TourTranslation {
+  title: string
+  short_description: string
+  description: string
+  highlights: string[]
+  includes: string[]
+  excludes: string[]
+  requirements: string[]
+  meeting_point: string
+}
 
 export interface TourOption {
   id: string
