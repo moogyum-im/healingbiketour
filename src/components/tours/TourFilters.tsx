@@ -16,7 +16,7 @@ interface TourFiltersProps {
   }
 }
 
-const categories: TourCategory[] = ['city', 'coastal', 'mountain', 'cultural', 'night', 'family']
+const categories: TourCategory[] = ['city', 'coastal', 'mountain', 'cultural', 'night', 'family', 'national']
 const difficulties: TourDifficulty[] = ['easy', 'moderate', 'hard']
 
 const categoryEmoji: Record<TourCategory, string> = {
@@ -26,6 +26,7 @@ const categoryEmoji: Record<TourCategory, string> = {
   cultural: '🏯',
   night: '🌙',
   family: '👨‍👩‍👧',
+  national: '🏅',
 }
 
 export default function TourFilters({ currentParams }: TourFiltersProps) {

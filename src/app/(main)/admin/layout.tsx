@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bike, LayoutDashboard, Map, CalendarDays, Users, MessageSquare, LogOut, ChevronRight, Gift, MessageCircle, Megaphone, HelpCircle, UserCheck, TrendingUp, KeyRound } from 'lucide-react'
+import { Bike, LayoutDashboard, Map, CalendarDays, Users, MessageSquare, LogOut, ChevronRight, Gift, MessageCircle, Megaphone, HelpCircle, UserCheck, TrendingUp, KeyRound, Layers } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
@@ -28,6 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: '/admin/reviews', label: '리뷰 관리', icon: MessageSquare },
     { href: '/admin/credits', label: '크레딧 관리', icon: Gift },
     { href: '/admin/chats', label: '상담 문의', icon: MessageCircle, badge: pendingChats ?? 0 },
+    { href: '/admin/popups', label: '팝업 관리', icon: Layers },
     { href: '/admin/notices', label: '공지사항', icon: Megaphone },
     { href: '/admin/faqs', label: 'FAQ 관리', icon: HelpCircle },
     { href: '/admin/guide', label: '가이드 지원', icon: UserCheck },

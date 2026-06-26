@@ -4,6 +4,7 @@ interface Section {
   icon: React.ElementType
   title: string
   color: string
+  defaultOpen?: boolean
   items: { label?: string; content: string }[]
 }
 
@@ -22,12 +23,18 @@ const SECTIONS: Section[] = [
   },
   {
     icon: ShieldCheck,
-    title: '보험 안내',
+    title: '운영자 배상책임보험 안내',
     color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    defaultOpen: true,
     items: [
-      { label: '운영자 보험', content: '힐링바이크투어는 자전거 장비 파손 및 운영 관련 배상책임보험에 가입되어 있습니다.' },
-      { label: '개인 여행자 보험', content: '참가자 개인에 대한 여행자 보험은 제공되지 않습니다. 개인 상해·여행자 보험은 참가자 본인이 별도로 가입하시기를 권장합니다.' },
-      { label: '면책 사항', content: '본인 과실에 의한 사고, 음주 후 탑승, 교통법규 위반 등은 운영자 보험의 보상 범위에서 제외됩니다.' },
+      { label: '보험사', content: '메리츠화재 (증권번호 14850-481)' },
+      { label: '보험종류', content: '여행업자 전문배상책임보험 (기타 전문직업인배상책임보험 J-1)' },
+      { label: '보장한도', content: '1청구당 최대 300,000,000원 (3억원) · 공제금액 3,000,000원' },
+      { label: '보험기간', content: '2026년 06월 19일 ~ 2027년 06월 19일' },
+      { label: '보장 범위', content: '투어 운영 중 고객에게 발생한 제3자 배상책임 사고를 보장합니다. 산악자전거 등 레저·스포츠 활동 포함.' },
+      { label: '적용 조건', content: '전문 가이드 동반 투어에 한하여 적용됩니다. 가이드 미동반 자유 라이딩 중 발생한 사고는 보장 범위에서 제외됩니다.' },
+      { label: '개인 여행자 보험', content: '본 보험은 운영사 배상책임보험으로, 참가자 개인의 상해·의료비는 보장하지 않습니다. 개인 여행자 보험은 참가자 본인이 별도로 가입하시기를 권장합니다.' },
+      { label: '면책 사항', content: '본인 과실에 의한 사고, 음주 후 탑승, 교통법규 위반, 천재지변(자연재해), 분실·도난, 감염병(에이즈·사스·조류독감 등)은 보상 범위에서 제외됩니다.' },
     ],
   },
   {
@@ -74,8 +81,8 @@ export default function TourLegalSection() {
     <section className="mt-10 border-t border-zinc-200 pt-10">
       <h2 className="text-xl font-black text-zinc-900 mb-6">예약 전 꼭 확인하세요</h2>
       <div className="space-y-4">
-        {SECTIONS.map(({ icon: Icon, title, color, items }) => (
-          <details key={title} className={`group rounded-xl border ${color} overflow-hidden`}>
+        {SECTIONS.map(({ icon: Icon, title, color, defaultOpen, items }) => (
+          <details key={title} open={defaultOpen} className={`group rounded-xl border ${color} overflow-hidden`}>
             <summary className="flex cursor-pointer items-center gap-3 px-4 py-3.5 font-bold text-sm select-none">
               <Icon className="h-4 w-4 shrink-0" />
               {title}

@@ -25,6 +25,7 @@ export interface Tour {
   requirements: string[]
   highlights: string[]
   options?: TourOption[]
+  sort_order?: number
   rating: number
   review_count: number
   is_active: boolean
@@ -39,6 +40,7 @@ export type TourCategory =
   | 'cultural'  // 문화 투어
   | 'night'     // 야간 투어
   | 'family'    // 가족 투어
+  | 'national'  // 국토종주
 
 export type TourDifficulty = 'easy' | 'moderate' | 'hard'
 

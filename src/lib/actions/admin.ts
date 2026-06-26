@@ -46,3 +46,24 @@ export async function revalidateTours(slug?: string) {
   revalidatePath('/tours')
   if (slug) revalidatePath(`/tours/${slug}`)
 }
+
+export async function updateTourSortOrder(tourId: string, sortOrder: number) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: '로그인이 필요합니다.' }
+
+  const { data: role } = await supabase.rpc('get_my_role')
+  if (role !== 'admin') return { error: '권한이 없습니다.' }
+
+  const { error } = await supabase
+    .from('tours')
+    .update({ sort_order: sortOrder })
+    .eq('id', tourId)
+
+  if (error) return { error: '순서 저장에 실패했습니다.' }
+
+  revalidatePath('/', 'layout')
+  revalidatePath('/tours')
+  revalidatePath('/admin/tours')
+  return { success: true }
+}

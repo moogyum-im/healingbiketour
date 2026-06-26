@@ -28,6 +28,7 @@ function dbRowToTour(t: Record<string, unknown>, fallback?: Tour): Tour {
     requirements:      (t.requirements as string[] | null) ?? fallback?.requirements ?? [],
     highlights:        (t.highlights as string[] | null) ?? fallback?.highlights ?? [],
     options:           (t.options as Tour['options']) ?? fallback?.options,
+    sort_order:        (t.sort_order as number | null) ?? fallback?.sort_order ?? 999,
     rating:            Number(t.rating ?? fallback?.rating ?? 0),
     review_count:      Number(t.review_count ?? fallback?.review_count ?? 0),
     is_active:         Boolean(t.is_active ?? fallback?.is_active ?? true),
@@ -44,7 +45,6 @@ export async function getToursWithOverrides(): Promise<Tour[]> {
     const { data: dbTours } = await supabase
       .from('tours')
       .select('*')
-      .order('created_at', { ascending: false })
 
     const dbBySlug = Object.fromEntries((dbTours ?? []).map((t) => [t.slug as string, t]))
     const mockSlugs = new Set(mockTours.map((t) => t.slug))
@@ -61,7 +61,9 @@ export async function getToursWithOverrides(): Promise<Tour[]> {
       .filter((t) => !mockSlugs.has(t.slug as string))
       .map((t) => dbRowToTour(t))
 
-    return [...mergedMock, ...newDbTours]
+    const all = [...mergedMock, ...newDbTours]
+    all.sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
+    return all
   } catch {
     return mockTours
   }

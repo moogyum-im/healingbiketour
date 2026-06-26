@@ -46,6 +46,7 @@ export function getCategoryLabel(category: string) {
     cultural: '문화 투어',
     night: '야간 투어',
     family: '가족 투어',
+    national: '국토종주',
   }
   return map[category] ?? category
 }

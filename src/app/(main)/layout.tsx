@@ -1,14 +1,16 @@
 import type { Metadata } from 'next'
 import { Geist } from 'next/font/google'
-import './globals.css'
+import '../globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import FloatingChat from '@/components/ui/FloatingChat'
+import PopupBanner from '@/components/ui/PopupBanner'
 import { SessionProvider } from '@/providers/SessionProvider'
 import { Toaster } from 'react-hot-toast'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getLocale } from 'next-intl/server'
 import { getToursWithOverrides } from '@/lib/tours'
+import { createClient } from '@/lib/supabase/server'
 
 const geist = Geist({
   subsets: ['latin'],
@@ -33,7 +35,14 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
   const messages = await getMessages()
-  const tours = await getToursWithOverrides()
+  const [tours, supabase] = await Promise.all([getToursWithOverrides(), createClient()])
+  const today = new Date().toISOString().split('T')[0]
+  const { data: activePopups } = await supabase
+    .from('popups')
+    .select('id, image_url, link_url, position')
+    .eq('is_active', true)
+    .or(`start_date.is.null,start_date.lte.${today}`)
+    .or(`end_date.is.null,end_date.gte.${today}`)
 
   return (
     <html lang={locale} className={`${geist.variable} h-full antialiased`}>
@@ -44,6 +53,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main className="flex-1">{children}</main>
             <Footer />
             <FloatingChat />
+            {activePopups && activePopups.length > 0 && (
+              <PopupBanner popups={activePopups} />
+            )}
           </SessionProvider>
         </NextIntlClientProvider>
         <Toaster

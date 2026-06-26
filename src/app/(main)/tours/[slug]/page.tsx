@@ -20,6 +20,9 @@ import RouteSection from '@/components/tours/RouteSection'
 import AraRouteSection from '@/components/tours/AraRouteSection'
 import HaengjuRouteSection from '@/components/tours/HaengjuRouteSection'
 import PeaceNuriRouteSection from '@/components/tours/PeaceNuriRouteSection'
+import ChuncheonRouteSection from '@/components/tours/ChuncheonRouteSection'
+import NationalRouteSection from '@/components/tours/NationalRouteSection'
+import OlympicRouteSection from '@/components/tours/OlympicRouteSection'
 import DrinkingWarning from '@/components/ui/DrinkingWarning'
 import TourAdminEditor from '@/components/admin/TourAdminEditor'
 import ReviewsPreview from '@/components/tours/ReviewsPreview'
@@ -225,6 +228,9 @@ export default async function TourDetailPage({ params }: PageProps) {
             {tour.slug === 'ara-waterway-tour' && <AraRouteSection />}
             {tour.slug === 'haengju-fortress-tour' && <HaengjuRouteSection />}
             {tour.slug === 'peace-nuri-1' && <PeaceNuriRouteSection />}
+            {tour.slug === 'chuncheon-lakeside-tour' && <ChuncheonRouteSection />}
+            {tour.slug === 'national-cycling-route' && <NationalRouteSection />}
+            {tour.slug === 'olympic-park-tour' && <OlympicRouteSection />}
 
             {/* Highlights */}
             <section className="mt-8">

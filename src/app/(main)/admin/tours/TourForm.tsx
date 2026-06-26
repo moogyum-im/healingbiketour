@@ -47,6 +47,7 @@ const CATEGORIES = [
   { value: 'cultural', label: '문화 투어' },
   { value: 'night', label: '야간 투어' },
   { value: 'family', label: '가족 투어' },
+  { value: 'national', label: '국토종주' },
 ]
 const DIFFICULTIES = [
   { value: 'easy', label: '초급' },

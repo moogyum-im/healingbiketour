@@ -48,6 +48,20 @@ const TOURS = [
     price: 55000,
     img: '/stop-haengju-fortress.png',
   },
+  {
+    href: '/tours/olympic-park-tour',
+    label: '올림픽공원 바이크투어',
+    desc: '당산역 출발 · 여의도·반포대교·잠실·올림픽공원',
+    price: 88000,
+    img: '/stop-olympic-park.png',
+  },
+  {
+    href: '/tours/chuncheon-lakeside-tour',
+    label: '호반 춘천코스 바이크투어',
+    desc: '당산역 출발 · 두물머리·자라섬·남이섬·춘천 · 편도 129km',
+    price: 150000,
+    img: '/stop-chuncheon-jaraseom.png',
+  },
 ]
 
 export default function CategorySection() {
