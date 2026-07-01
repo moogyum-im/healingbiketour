@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import {
   Clock,
   Route,
@@ -33,8 +33,6 @@ import {
   formatPrice,
   formatDuration,
   formatDistance,
-  getCategoryLabel,
-  getDifficultyLabel,
 } from '@/utils/format'
 import type { Metadata } from 'next'
 import type { Tour as TourType } from '@/types'
@@ -119,6 +117,7 @@ export default async function TourDetailPage({ params }: PageProps) {
 
   const locale = await getLocale()
   const tour = localizeTour(rawTour, locale)
+  const t = await getTranslations('tourDetail')
 
   // DB tour의 실제 UUID (리뷰 조회에 사용)
   const tourDbId = dbTour?.id ?? mockTour!.id
@@ -153,7 +152,7 @@ export default async function TourDetailPage({ params }: PageProps) {
             className="flex items-center gap-1 rounded-lg bg-black/40 px-3 py-1.5 text-sm text-white backdrop-blur-sm hover:bg-black/60 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            목록으로
+            {t('back_to_list')}
           </Link>
         </div>
         {/* 관리자 전용 인라인 편집 도구 */}
@@ -172,9 +171,9 @@ export default async function TourDetailPage({ params }: PageProps) {
           <div className="flex-1 min-w-0">
             {/* Title */}
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge variant="info">{getCategoryLabel(tour.category)}</Badge>
+              <Badge variant="info">{t(`category_${tour.category}`)}</Badge>
               <Badge variant={difficultyVariant[tour.difficulty]}>
-                {getDifficultyLabel(tour.difficulty)}
+                {t(`difficulty_${tour.difficulty}`)}
               </Badge>
             </div>
             <h1 className="text-2xl font-bold text-zinc-900 sm:text-3xl">{tour.title}</h1>
@@ -197,20 +196,20 @@ export default async function TourDetailPage({ params }: PageProps) {
                     </div>
                     <span className="font-bold text-zinc-900 ml-1">{reviewAvg.toFixed(1)}</span>
                   </div>
-                  <span className="text-sm text-zinc-500">({reviewTotal}개의 리뷰)</span>
+                  <span className="text-sm text-zinc-500">{t('review_count', { count: reviewTotal })}</span>
                 </>
               ) : (
-                <span className="text-sm text-zinc-400">아직 리뷰가 없습니다</span>
+                <span className="text-sm text-zinc-400">{t('no_reviews')}</span>
               )}
             </div>
 
             {/* Quick Stats */}
             <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: Clock, label: '소요 시간', value: formatDuration(tour.duration_hours) },
-                { icon: Route, label: '거리', value: formatDistance(tour.distance_km) },
-                { icon: Users, label: '최대 인원', value: `${tour.max_participants}명` },
-                { icon: MapPin, label: '집결지', value: tour.meeting_point },
+                { icon: Clock, label: t('duration'), value: formatDuration(tour.duration_hours) },
+                { icon: Route, label: t('distance'), value: formatDistance(tour.distance_km) },
+                { icon: Users, label: t('min_participants'), value: t('people', { n: tour.max_participants }) },
+                { icon: MapPin, label: t('meeting_point'), value: tour.meeting_point },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="rounded-xl border border-zinc-200 p-3">
                   <div className="flex items-center gap-2 text-zinc-500 mb-1">
@@ -224,7 +223,7 @@ export default async function TourDetailPage({ params }: PageProps) {
 
             {/* Description */}
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-zinc-900 mb-3">투어 소개</h2>
+              <h2 className="text-xl font-bold text-zinc-900 mb-3">{t('intro')}</h2>
               <p className="text-zinc-600 leading-relaxed">{tour.description}</p>
             </section>
 
@@ -239,7 +238,7 @@ export default async function TourDetailPage({ params }: PageProps) {
 
             {/* Highlights */}
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-zinc-900 mb-3">하이라이트</h2>
+              <h2 className="text-xl font-bold text-zinc-900 mb-3">{t('highlights')}</h2>
               <ul className="space-y-2">
                 {tour.highlights.map((h) => (
                   <li key={h} className="flex items-start gap-2 text-zinc-600">
@@ -253,7 +252,7 @@ export default async function TourDetailPage({ params }: PageProps) {
             {/* Tour Options */}
             {tour.options && tour.options.length > 0 && (
               <section className="mt-8">
-                <h2 className="text-xl font-bold text-zinc-900 mb-3">코스 옵션</h2>
+                <h2 className="text-xl font-bold text-zinc-900 mb-3">{t('course_options')}</h2>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {tour.options.map((option) => (
                     <div
@@ -265,11 +264,11 @@ export default async function TourDetailPage({ params }: PageProps) {
                         <p className="text-sm text-zinc-500 mb-2">{option.description}</p>
                       )}
                       <div className="flex items-center gap-3 text-xs text-zinc-400">
-                        {option.duration_hours && <span>소요 약 {option.duration_hours}시간</span>}
+                        {option.duration_hours && <span>{t('approx_hours', { n: option.duration_hours })}</span>}
                         <span className="font-semibold text-emerald-700">
                           {option.flat_fee_krw
-                            ? `+용달비 ${option.flat_fee_krw.toLocaleString()}원`
-                            : '추가 요금 없음'}
+                            ? t('transport_fee', { price: `${option.flat_fee_krw.toLocaleString()}원` })
+                            : t('no_extra_fee')}
                         </span>
                       </div>
                     </div>
@@ -280,11 +279,11 @@ export default async function TourDetailPage({ params }: PageProps) {
 
             {/* Includes / Excludes */}
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-zinc-900 mb-4">포함 / 불포함</h2>
+              <h2 className="text-xl font-bold text-zinc-900 mb-4">{t('includes_excludes')}</h2>
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-700 mb-2">
-                    <CheckCircle className="h-4 w-4" /> 포함 항목
+                    <CheckCircle className="h-4 w-4" /> {t('included')}
                   </h3>
                   <ul className="space-y-1.5">
                     {tour.includes.map((item) => (
@@ -297,7 +296,7 @@ export default async function TourDetailPage({ params }: PageProps) {
                 </div>
                 <div>
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-red-600 mb-2">
-                    <XCircle className="h-4 w-4" /> 불포함 항목
+                    <XCircle className="h-4 w-4" /> {t('excluded')}
                   </h3>
                   <ul className="space-y-1.5">
                     {tour.excludes.map((item) => (
@@ -313,7 +312,7 @@ export default async function TourDetailPage({ params }: PageProps) {
 
             {/* Requirements */}
             <section className="mt-8">
-              <h2 className="text-xl font-bold text-zinc-900 mb-3">참가 조건</h2>
+              <h2 className="text-xl font-bold text-zinc-900 mb-3">{t('requirements')}</h2>
               <ul className="space-y-2 mb-5">
                 {tour.requirements.map((req) => (
                   <li key={req} className="flex items-start gap-2 text-sm text-zinc-600">
