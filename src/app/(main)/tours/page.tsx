@@ -6,7 +6,7 @@ import { localizeTour } from '@/lib/tour-i18n'
 import type { TourCategory, TourDifficulty } from '@/types'
 import { getCategoryLabel } from '@/utils/format'
 import AdminAddTourButton from '@/components/tours/AdminAddTourButton'
-import { getLocale } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 interface ToursPageProps {
   searchParams: Promise<{
@@ -27,9 +27,10 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
   const params = await searchParams
   const { category, difficulty, search, minPrice, maxPrice } = params
   const locale = await getLocale()
+  const t = await getTranslations('toursPage')
 
   // 필터 적용
-  const allTours = (await getToursWithOverrides()).map((t) => localizeTour(t, locale))
+  const allTours = (await getToursWithOverrides()).map((tour) => localizeTour(tour, locale))
   let filtered = allTours.filter((t) => t.is_active)
 
   if (category) filtered = filtered.filter((t) => t.category === category)
@@ -46,8 +47,8 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
   if (maxPrice) filtered = filtered.filter((t) => t.price_krw <= Number(maxPrice))
 
   const pageTitle = category
-    ? `${getCategoryLabel(category)} 투어`
-    : '전체 투어'
+    ? t('category_tours', { category: getCategoryLabel(category) })
+    : t('all_tours')
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -58,7 +59,7 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
             <div>
               <h1 className="text-2xl font-bold text-zinc-900">{pageTitle}</h1>
               <p className="mt-1 text-zinc-500">
-                총 <span className="font-semibold text-emerald-600">{filtered.length}개</span>의 투어
+                <span className="font-semibold text-emerald-600">{t('count', { count: filtered.length })}</span>
               </p>
             </div>
             <AdminAddTourButton />
@@ -80,9 +81,9 @@ export default async function ToursPage({ searchParams }: ToursPageProps) {
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <span className="text-5xl mb-4">🚴</span>
-                <h3 className="text-lg font-semibold text-zinc-700">투어를 찾을 수 없어요</h3>
+                <h3 className="text-lg font-semibold text-zinc-700">{t('no_results_title')}</h3>
                 <p className="mt-1 text-sm text-zinc-500">
-                  다른 필터 조건으로 검색해보세요.
+                  {t('no_results_desc')}
                 </p>
               </div>
             ) : (

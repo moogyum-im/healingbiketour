@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { RENTAL_PRICES } from '@/lib/rental-prices'
 
 const IMG: Record<string, string> = {
@@ -20,6 +21,7 @@ const IMG: Record<string, string> = {
 }
 
 export default function RentalCarousel() {
+  const t = useTranslations('home')
   const [active, setActive] = useState(0)
   const total = RENTAL_PRICES.length
 
@@ -34,22 +36,26 @@ export default function RentalCarousel() {
 
   const bike = RENTAL_PRICES[active]
 
-  // 비선형 offset: 안쪽은 좁게, 바깥은 더 당겨서 입체감
   const OFFSETS = [0, 195, 345]
+
+  const priceTiers = [
+    { labelKey: 'rental_day_1_2' as const, price: bike.day12 },
+    { labelKey: 'rental_day_3_4' as const, price: bike.day34 },
+    { labelKey: 'rental_day_5plus' as const, price: bike.day5plus, highlight: true },
+  ]
 
   return (
     <section className="py-24 bg-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        {/* 헤더 */}
         <div className="flex items-end justify-between mb-16">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-2">Bike Rental</p>
-            <h2 className="text-3xl font-black text-zinc-900">자전거 렌탈하기</h2>
-            <p className="mt-2 text-zinc-500">다양한 자전거를 골라 자유롭게 즐겨보세요</p>
+            <h2 className="text-3xl font-black text-zinc-900">{t('rental_title')}</h2>
+            <p className="mt-2 text-zinc-500">{t('rental_subtitle')}</p>
           </div>
           <Link href="/rental" className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-zinc-400 hover:text-zinc-900 transition-colors">
-            전체 보기 <ArrowRight className="h-4 w-4" />
+            {t('rental_view_all')} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -109,15 +115,11 @@ export default function RentalCarousel() {
           <p className="text-sm text-zinc-400 mt-1">{bike.material} · {bike.size}</p>
 
           <div className="inline-flex mt-5 divide-x divide-zinc-200 rounded-2xl border border-zinc-200 overflow-hidden">
-            {[
-              { label: '1–2일', price: bike.day12 },
-              { label: '3–4일', price: bike.day34 },
-              { label: '5일+',  price: bike.day5plus, highlight: true },
-            ].map(({ label, price, highlight }) => (
-              <div key={label} className={`px-7 py-3 text-center ${highlight ? 'bg-emerald-50' : 'bg-white'}`}>
-                <p className={`text-[10px] font-semibold uppercase tracking-wide ${highlight ? 'text-emerald-500' : 'text-zinc-400'}`}>{label}</p>
+            {priceTiers.map(({ labelKey, price, highlight }) => (
+              <div key={labelKey} className={`px-7 py-3 text-center ${highlight ? 'bg-emerald-50' : 'bg-white'}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wide ${highlight ? 'text-emerald-500' : 'text-zinc-400'}`}>{t(labelKey)}</p>
                 <p className={`text-base font-black mt-0.5 ${highlight ? 'text-emerald-600' : 'text-zinc-800'}`}>
-                  {price.toLocaleString()}<span className="text-xs font-normal opacity-60">원</span>
+                  {price.toLocaleString()}<span className="text-xs font-normal opacity-60">{t('per_24h')}</span>
                 </p>
               </div>
             ))}
@@ -158,7 +160,7 @@ export default function RentalCarousel() {
             href={`/rental?bike=${bike.bikeId}`}
             className="flex items-center gap-2 rounded-2xl bg-zinc-900 px-8 py-4 text-sm font-bold text-white hover:bg-zinc-700 transition-colors"
           >
-            렌탈 예약하기 <ArrowRight className="h-4 w-4" />
+            {t('rental_cta')} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 

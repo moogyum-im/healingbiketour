@@ -1,26 +1,6 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { Bike, MessageCircle, Share2, Video } from 'lucide-react'
-
-const footerLinks = {
-  투어: [
-    { label: '전체 투어', href: '/tours' },
-    { label: '도심 투어', href: '/tours?category=city' },
-    { label: '산악 투어', href: '/tours?category=mountain' },
-    { label: '해안 투어', href: '/tours?category=coastal' },
-  ],
-  고객지원: [
-    { label: '자주 묻는 질문', href: '/faq' },
-    { label: '예약 조회', href: '/my/bookings' },
-    { label: '취소 및 환불 정책', href: '/policy/refund' },
-    { label: '공지사항', href: '/notice' },
-  ],
-  회사: [
-    { label: '서비스 소개', href: '/about' },
-    { label: '가이드 지원', href: '/guide/apply' },
-    { label: '이용약관', href: '/policy/terms' },
-    { label: '개인정보 처리방침', href: '/policy/privacy' },
-  ],
-}
 
 const socials = [
   { label: 'Instagram', href: 'https://instagram.com', icon: Share2 },
@@ -28,7 +8,30 @@ const socials = [
   { label: 'KakaoTalk', href: 'https://kakao.com', icon: MessageCircle },
 ]
 
-export default function Footer() {
+export default async function Footer() {
+  const t = await getTranslations('footer')
+
+  const footerLinks = {
+    [t('tours_heading')]: [
+      { label: t('all_tours'), href: '/tours' },
+      { label: t('city_tours'), href: '/tours?category=city' },
+      { label: t('mountain_tours'), href: '/tours?category=mountain' },
+      { label: t('coastal_tours'), href: '/tours?category=coastal' },
+    ],
+    [t('support_heading')]: [
+      { label: t('faq'), href: '/faq' },
+      { label: t('my_bookings'), href: '/my/bookings' },
+      { label: t('refund_policy'), href: '/policy/refund' },
+      { label: t('notices'), href: '/notice' },
+    ],
+    [t('company_heading')]: [
+      { label: t('about'), href: '/about' },
+      { label: t('guide_apply'), href: '/guide/apply' },
+      { label: t('terms'), href: '/policy/terms' },
+      { label: t('privacy'), href: '/policy/privacy' },
+    ],
+  }
+
   return (
     <footer className="border-t border-zinc-200 bg-zinc-950 text-zinc-400">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -40,8 +43,7 @@ export default function Footer() {
               <span className="text-lg font-bold">힐링바이크투어</span>
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-zinc-500">
-              서울과 전국 각지의 아름다운 자전거 투어를 경험해보세요. 전문 가이드와 함께하는
-              안전하고 즐거운 라이딩을 제공합니다.
+              {t('brand_desc')}
             </p>
             <div className="mt-4 flex gap-3">
               {socials.map(({ label, href, icon: Icon }) => (
@@ -80,10 +82,10 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-zinc-800 pt-8 text-xs text-zinc-600 space-y-1.5">
-          <p>상호: 주식회사 힐링바이크투어 &nbsp;|&nbsp; 대표자: 이상호 &nbsp;|&nbsp; 사업자등록번호: 860-86-04061</p>
-          <p>사업장 소재지: 서울특별시 영등포구 당산로50길 11, 102호(당산동6가, 당산빌) &nbsp;|&nbsp; 이메일: healingbiketour@gmail.com</p>
-          <p>통신판매업신고번호: 제2026-서울영등포-1384호 &nbsp;|&nbsp; 여행사업 등록 영등포구</p>
-          <p className="pt-1 text-zinc-700">© 2026 주식회사 힐링바이크투어. All rights reserved.</p>
+          <p>{t('biz_info')}</p>
+          <p>{t('biz_address')}</p>
+          <p>{t('biz_mail_order')}</p>
+          <p className="pt-1 text-zinc-700">{t('copyright')}</p>
         </div>
       </div>
     </footer>

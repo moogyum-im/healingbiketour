@@ -2,6 +2,7 @@
 
 import { Camera, Download, Play, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 const VIDEO_ID = 'X0LkFcq9lE0'
 const EMBED_SRC =
@@ -11,6 +12,8 @@ const EMBED_SRC =
   `&start=2&playsinline=1&disablekb=1`
 
 export default function VideoHighlightSection() {
+  const t = useTranslations('home')
+
   return (
     <section className="relative bg-zinc-950 py-24">
       {/* Background glow — overflow clipped separately so badge can overflow */}
@@ -39,18 +42,14 @@ export default function VideoHighlightSection() {
             </h2>
 
             <p className="mt-6 text-lg text-zinc-400 leading-relaxed">
-              투어가 끝나도, 달리신 모든 순간은 영원히 남습니다.
-              <br />
-              블랙박스로 촬영된{' '}
-              <strong className="text-white">전 구간 라이딩 영상</strong>을
-              투어 후 제공해 드립니다.
+              {t('video_desc')}
             </p>
 
             <div className="mt-8 space-y-3">
               {[
-                { icon: Camera, text: '자전거에 블랙박스 기본 장착' },
-                { icon: Play,   text: '투어 종료 후 전체 루트 영상 제공' },
-                { icon: Download, text: '기기에 저장하여 영구 소장 가능' },
+                { icon: Camera, text: t('video_camera') },
+                { icon: Play,   text: t('video_play') },
+                { icon: Download, text: t('video_download') },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} className="flex items-center gap-3 text-sm text-zinc-300">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
@@ -66,7 +65,7 @@ export default function VideoHighlightSection() {
               className="mt-10 inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm font-bold text-white transition-all hover:bg-emerald-400 hover:scale-[1.02]"
             >
               <Play className="h-4 w-4" />
-              투어 예약하기
+              {t('video_cta')}
             </Link>
           </div>
 
@@ -111,8 +110,8 @@ export default function VideoHighlightSection() {
 
               {/* Floating badge — positioned outside phone to the right */}
               <div className="absolute -top-4 -right-28 rounded-2xl bg-emerald-500 px-4 py-3 shadow-lg shadow-emerald-500/40 z-10 whitespace-nowrap">
-                <p className="text-xs font-bold text-white/80">투어 후</p>
-                <p className="text-lg font-black text-white">영상 무료 발송</p>
+                <p className="text-xs font-bold text-white/80">{t('video_badge_top')}</p>
+                <p className="text-lg font-black text-white">{t('video_badge_main')}</p>
               </div>
             </div>
           </div>
