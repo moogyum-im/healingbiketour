@@ -27,6 +27,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
       id, booking_number, status, participants, total_amount_krw,
       contact_name, contact_email, contact_phone, created_at,
       cancellation_reason, cancellation_requested_at,
+      nationality, passport_number,
       tours ( title ),
       tour_dates ( date, start_time ),
       payments ( status, payment_method )
@@ -99,9 +100,11 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-100 bg-zinc-50">
-                <th className="text-left px-5 py-3.5 font-semibold text-zinc-600">예약번호</th>
-                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600">투어</th>
-                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600">예약자</th>
+                <th className="text-left px-5 py-3.5 font-semibold text-zinc-600 whitespace-nowrap">예약번호</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600">투어명</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600 whitespace-nowrap">예약자</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600 whitespace-nowrap">연락처</th>
+                <th className="text-left px-4 py-3.5 font-semibold text-zinc-600 whitespace-nowrap">여권번호</th>
                 <th className="text-left px-4 py-3.5 font-semibold text-zinc-600">날짜</th>
                 <th className="text-center px-4 py-3.5 font-semibold text-zinc-600">인원</th>
                 <th className="text-right px-4 py-3.5 font-semibold text-zinc-600">금액</th>
@@ -135,7 +138,20 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                     </td>
                     <td className="px-4 py-3.5">
                       <p className="font-medium text-zinc-900">{booking.contact_name}</p>
-                      <p className="text-xs text-zinc-400">{booking.contact_phone}</p>
+                      <p className="text-xs text-zinc-400">{booking.contact_email}</p>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <p className="text-sm text-zinc-700 whitespace-nowrap">{booking.contact_phone ?? '-'}</p>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {(booking as any).nationality === 'foreign' ? (
+                        <div>
+                          <span className="inline-block mb-0.5 rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">외국인</span>
+                          <p className="font-mono text-xs text-zinc-700">{(booking as any).passport_number ?? '-'}</p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-zinc-400">내국인</span>
+                      )}
                     </td>
                     <td className="px-4 py-3.5 text-zinc-600">
                       {tourDate?.date

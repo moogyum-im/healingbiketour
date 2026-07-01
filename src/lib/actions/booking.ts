@@ -23,6 +23,8 @@ export interface CreateBookingInput {
   contactPhone: string
   specialRequests?: string
   totalAmountKrw: number
+  nationality?: 'korean' | 'foreign'
+  passportNumber?: string
 }
 
 // ── 예약 생성 ──────────────────────────────────────────────
@@ -66,6 +68,8 @@ export async function createBooking(input: CreateBookingInput) {
       contact_email: input.contactEmail,
       contact_phone: input.contactPhone,
       special_requests: input.specialRequests ?? null,
+      nationality: input.nationality ?? 'korean',
+      passport_number: input.passportNumber ?? null,
       status: 'pending',
     })
     .select()

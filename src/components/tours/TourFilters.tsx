@@ -2,8 +2,8 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import type { TourCategory, TourDifficulty } from '@/types'
-import { getCategoryLabel, getDifficultyLabel } from '@/utils/format'
 import { cn } from '@/utils/cn'
 
 interface TourFiltersProps {
@@ -32,11 +32,12 @@ const categoryEmoji: Record<TourCategory, string> = {
 export default function TourFilters({ currentParams }: TourFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations('filters')
+  const tTour = useTranslations('tourDetail')
 
   const updateFilter = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams()
-      // Preserve existing params
       Object.entries(currentParams).forEach(([k, v]) => {
         if (v && k !== key) params.set(k, v)
       })
@@ -55,21 +56,26 @@ export default function TourFilters({ currentParams }: TourFiltersProps) {
     !!currentParams.minPrice ||
     !!currentParams.maxPrice
 
+  const priceRanges = [
+    { key: 'price_under30', max: '30000' },
+    { key: 'price_30_50', min: '30000', max: '50000' },
+    { key: 'price_50_80', min: '50000', max: '80000' },
+    { key: 'price_over80', min: '80000' },
+  ] as const
+
   return (
     <div className="space-y-6">
-      {/* Clear */}
       {hasFilters && (
         <button
           onClick={clearAll}
           className="w-full rounded-xl border border-zinc-300 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
         >
-          필터 초기화
+          {t('clear')}
         </button>
       )}
 
-      {/* Category */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900">카테고리</h3>
+        <h3 className="mb-3 text-sm font-semibold text-zinc-900">{t('category')}</h3>
         <div className="space-y-1">
           {categories.map((cat) => (
             <button
@@ -85,15 +91,14 @@ export default function TourFilters({ currentParams }: TourFiltersProps) {
               )}
             >
               <span>{categoryEmoji[cat]}</span>
-              <span>{getCategoryLabel(cat)}</span>
+              <span>{tTour(`category_${cat}`)}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Difficulty */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900">난이도</h3>
+        <h3 className="mb-3 text-sm font-semibold text-zinc-900">{t('difficulty')}</h3>
         <div className="flex flex-wrap gap-2">
           {difficulties.map((diff) => (
             <button
@@ -112,27 +117,21 @@ export default function TourFilters({ currentParams }: TourFiltersProps) {
                   : 'border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50'
               )}
             >
-              {getDifficultyLabel(diff)}
+              {tTour(`difficulty_${diff}`)}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Price Range */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <h3 className="mb-3 text-sm font-semibold text-zinc-900">가격대</h3>
+        <h3 className="mb-3 text-sm font-semibold text-zinc-900">{t('price')}</h3>
         <div className="space-y-2">
-          {[
-            { label: '3만원 이하', max: '30000' },
-            { label: '3~5만원', min: '30000', max: '50000' },
-            { label: '5~8만원', min: '50000', max: '80000' },
-            { label: '8만원 이상', min: '80000' },
-          ].map(({ label, min, max }) => {
+          {priceRanges.map(({ key, min, max }) => {
             const active =
               currentParams.minPrice === (min ?? '') && currentParams.maxPrice === (max ?? '')
             return (
               <button
-                key={label}
+                key={key}
                 onClick={() => {
                   if (active) {
                     const p = new URLSearchParams()
@@ -155,7 +154,7 @@ export default function TourFilters({ currentParams }: TourFiltersProps) {
                     : 'text-zinc-600 hover:bg-zinc-50'
                 )}
               >
-                {label}
+                {t(key)}
               </button>
             )
           })}

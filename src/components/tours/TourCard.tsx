@@ -1,9 +1,21 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Star, Clock, Route, Lock } from 'lucide-react'
+import { getTranslations, getLocale } from 'next-intl/server'
 import type { Tour } from '@/types'
-import { formatPrice, formatDuration, formatDistance, getCategoryLabel, getDifficultyLabel } from '@/utils/format'
+import { formatPrice, formatDistance } from '@/utils/format'
 import { cn } from '@/utils/cn'
+
+function formatDurationLocale(hours: number, isKo: boolean) {
+  if (isKo) {
+    if (hours < 1) return `${Math.round(hours * 60)}분`
+    if (hours === Math.floor(hours)) return `${hours}시간`
+    return `${Math.floor(hours)}시간 ${Math.round((hours % 1) * 60)}분`
+  }
+  if (hours < 1) return `${Math.round(hours * 60)} min`
+  if (hours === Math.floor(hours)) return `${hours} hrs`
+  return `${Math.floor(hours)} hrs ${Math.round((hours % 1) * 60)} min`
+}
 
 interface TourCardProps {
   tour: Tour
@@ -16,7 +28,11 @@ const difficultyColor: Record<string, string> = {
   hard:     'bg-red-500/90',
 }
 
-export default function TourCard({ tour, className }: TourCardProps) {
+export default async function TourCard({ tour, className }: TourCardProps) {
+  const t = await getTranslations('tourDetail')
+  const locale = await getLocale()
+  const isKo = locale === 'ko'
+
   if (!tour.is_active) {
     return (
       <div
@@ -69,7 +85,7 @@ export default function TourCard({ tour, className }: TourCardProps) {
       {/* 상단 배지 */}
       <div className="relative flex items-center justify-between p-4">
         <span className="rounded-lg bg-white/20 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-          {getCategoryLabel(tour.category)}
+          {t(`category_${tour.category}`)}
         </span>
         {tour.review_count > 0 ? (
           <span className="flex items-center gap-1 rounded-lg bg-black/40 px-2 py-1 text-xs text-white backdrop-blur-sm">
@@ -88,7 +104,7 @@ export default function TourCard({ tour, className }: TourCardProps) {
       <div className="relative mt-auto p-4">
         <div className="mb-2">
           <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-bold text-white', difficultyColor[tour.difficulty] ?? 'bg-zinc-500/80')}>
-            {getDifficultyLabel(tour.difficulty)}
+            {t(`difficulty_${tour.difficulty}`)}
           </span>
         </div>
 
@@ -101,7 +117,7 @@ export default function TourCard({ tour, className }: TourCardProps) {
           <div className="flex items-center gap-3 text-xs text-white/60">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {formatDuration(tour.duration_hours)}
+              {formatDurationLocale(tour.duration_hours, isKo)}
             </span>
             <span className="flex items-center gap-1">
               <Route className="h-3 w-3" />
@@ -109,7 +125,7 @@ export default function TourCard({ tour, className }: TourCardProps) {
             </span>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-white/50">1인 기준</p>
+            <p className="text-[10px] text-white/50">{t('per_person')}</p>
             <p className="text-base font-black text-white">{formatPrice(tour.price_krw)}</p>
           </div>
         </div>

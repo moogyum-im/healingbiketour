@@ -6,6 +6,12 @@ export const BANK_ACCOUNT = {
   holder: '주식회사 힐링바이크투어',
 } as const
 
+export const BANK_ACCOUNT_FOREIGN = {
+  bank: 'Woori Bank (우리은행)',
+  account: '1081-201-678786',
+  holder: 'Healing Bike Tour',
+} as const
+
 // 결제수단 공통 라벨 (currency / channelKey 등은 각 파일에서 추가)
 export const PAYMENT_LABEL_CARD = {
   id: 'card',

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Calendar, Users, Minus, Plus, User, Bike, Gift, ArrowLeftRight, Clock } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
+import { Calendar, Users, Minus, Plus, Bike, Gift, ArrowLeftRight, Clock } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Tour } from '@/types'
 import Button from '@/components/ui/Button'
@@ -22,25 +23,18 @@ interface BookingWidgetProps {
   tour: Tour
 }
 
-const BIKE_OPTIONS = [
-  { id: 'city', label: '미니로드 / 로드', label_en: 'Mini Road / Road', emoji: '🚲', extra: 0 },
-  { id: 'mtb', label: 'MTB', label_en: 'MTB', emoji: '🏔️', extra: 10000 },
-  { id: 'ebike', label: '전기자전거', label_en: 'E-Bike', emoji: '⚡', extra: 15000 },
-]
-
-const ADDONS = [
-  {
-    id: 'guide',
-    icon: User,
-    label: '전문 영어 가이드',
-    label_en: 'Expert English Guide',
-    desc: '최대 10인 그룹, 영어 가능',
-    price: 100000,
-  },
-]
+const BIKE_OPTION_IDS = [
+  { id: 'city', labelKey: 'mini_road', emoji: '🚲', extra: 0 },
+  { id: 'mtb', labelKey: 'mtb', emoji: '🏔️', extra: 10000 },
+  { id: 'ebike', labelKey: 'ebike', emoji: '⚡', extra: 15000 },
+] as const
 
 export default function BookingWidget({ tour }: BookingWidgetProps) {
   const router = useRouter()
+  const t = useTranslations('booking')
+  const locale = useLocale()
+  const isKo = locale === 'ko'
+
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedSlotId, setSelectedSlotId] = useState('')
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
@@ -50,11 +44,9 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string>(
     tour.options?.[0]?.id ?? ''
   )
-  const [addons, setAddons] = useState<Set<string>>(new Set())
   const [useCredits, setUseCredits] = useState(false)
   const MOCK_CREDIT_BALANCE = 0
 
-  // 날짜 변경 시 시간 슬롯 로드
   useEffect(() => {
     setSelectedSlotId('')
     setTimeSlots([])
@@ -77,37 +69,25 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
       })
   }, [selectedDate, tour.id])
 
-  const toggleAddon = (id: string) => {
-    setAddons((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   const selectedOption = tour.options?.find((o) => o.id === selectedOptionId)
-  const selectedBike = BIKE_OPTIONS.find((b) => b.id === bikeType)
+  const selectedBike = BIKE_OPTION_IDS.find((b) => b.id === bikeType)
   const bikeExtra = (selectedBike?.extra ?? 0) * participants
-  const addonTotal = ADDONS.filter((a) => addons.has(a.id)).reduce((sum, a) => {
-    return sum + (a.id === 'guide' ? a.price : a.price * participants)
-  }, 0)
   const optionFlatFee = selectedOption?.flat_fee_krw ?? 0
-  const creditDiscount = useCredits ? Math.min(MOCK_CREDIT_BALANCE, tour.price_krw * participants + bikeExtra + addonTotal + optionFlatFee) : 0
-  const total = tour.price_krw * participants + bikeExtra + addonTotal + optionFlatFee - creditDiscount
+  const creditDiscount = useCredits ? Math.min(MOCK_CREDIT_BALANCE, tour.price_krw * participants + bikeExtra + optionFlatFee) : 0
+  const total = tour.price_krw * participants + bikeExtra + optionFlatFee - creditDiscount
 
   const handleBooking = () => {
     if (!selectedDate) {
-      alert('날짜를 선택해주세요.')
+      alert(t('date_required'))
       return
     }
     if (timeSlots.length > 0 && !selectedSlotId) {
-      alert('시간대를 선택해주세요.')
+      alert(t('time_required'))
       return
     }
     const selectedSlot = timeSlots.find((s) => s.id === selectedSlotId)
     if (selectedSlot && selectedSlot.available_slots - selectedSlot.booked_slots < participants) {
-      alert(`선택한 시간대의 남은 자전거가 부족합니다. (남은 대수: ${selectedSlot.available_slots - selectedSlot.booked_slots}대)`)
+      alert(t('not_enough_bikes', { n: selectedSlot.available_slots - selectedSlot.booked_slots }))
       return
     }
     const params = new URLSearchParams({
@@ -116,29 +96,29 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
       slot: selectedSlotId,
       participants: String(participants),
       bike: bikeType,
-      addons: Array.from(addons).join(','),
     })
     router.push(`/booking?${params}`)
   }
+
+  const displayPrice = !isKo && tour.price_usd
+    ? formatPrice(tour.price_usd, 'USD')
+    : formatPrice(tour.price_krw)
 
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-md">
       {/* Price */}
       <div className="mb-5">
-        <p className="text-xs text-zinc-400 mb-0.5">1인 기준</p>
-        <p className="text-3xl font-black text-zinc-900">{formatPrice(tour.price_krw)}</p>
-        {tour.price_usd && (
-          <p className="text-sm text-zinc-400 mt-0.5">≈ ${tour.price_usd} USD</p>
-        )}
+        <p className="text-xs text-zinc-400 mb-0.5">{t('per_person')}</p>
+        <p className="text-3xl font-black text-zinc-900">{displayPrice}</p>
       </div>
 
       <div className="space-y-5">
-        {/* Tour Options (왕복/편도 등) */}
+        {/* Tour Options */}
         {tour.options && tour.options.length > 0 && (
           <div>
             <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 mb-2">
               <ArrowLeftRight className="h-4 w-4 text-emerald-600" />
-              코스 옵션
+              {t('course_option')}
             </label>
             <div className="space-y-2">
               {tour.options.map((option) => (
@@ -154,8 +134,8 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                   <span className="font-semibold">{option.label}</span>
                   <span className="text-xs">
                     {option.flat_fee_krw
-                      ? `+용달비 ${option.flat_fee_krw.toLocaleString()}원`
-                      : '추가 없음'}
+                      ? `+${t('transport_fee_one')} ${option.flat_fee_krw.toLocaleString()}`
+                      : t('no_extra')}
                   </span>
                 </button>
               ))}
@@ -167,10 +147,10 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
         <div>
           <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 mb-2">
             <Bike className="h-4 w-4 text-emerald-600" />
-            자전거 선택
+            {t('bike_type')}
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {BIKE_OPTIONS.map((b) => (
+            {BIKE_OPTION_IDS.map((b) => (
               <button
                 key={b.id}
                 onClick={() => setBikeType(b.id)}
@@ -181,10 +161,10 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                 }`}
               >
                 <span className="text-xl">{b.emoji}</span>
-                <span>{b.label}</span>
+                <span>{t(b.labelKey)}</span>
                 {b.extra > 0 && (
                   <span className={`text-[10px] font-bold ${bikeType === b.id ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                    +{b.extra.toLocaleString()}원
+                    +{b.extra.toLocaleString()}
                   </span>
                 )}
               </button>
@@ -196,7 +176,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
         <div>
           <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 mb-2">
             <Calendar className="h-4 w-4 text-emerald-600" />
-            날짜 선택
+            {t('date')}
           </label>
           <CalendarPicker
             value={selectedDate}
@@ -211,15 +191,15 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
           <div>
             <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 mb-2">
               <Clock className="h-4 w-4 text-emerald-600" />
-              시간 선택
+              {t('time_slot')}
             </label>
             {loadingSlots ? (
               <div className="rounded-xl border border-zinc-200 py-4 text-center text-xs text-zinc-400">
-                불러오는 중...
+                {t('loading_slots')}
               </div>
             ) : timeSlots.length === 0 ? (
               <div className="rounded-xl border border-dashed border-zinc-200 py-4 text-center text-xs text-zinc-400">
-                이 날짜에는 예약 가능한 시간대가 없습니다.
+                {t('no_slots')}
               </div>
             ) : (
               <div className="space-y-2">
@@ -248,7 +228,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                         isFull ? 'text-red-400' : remaining <= 3 ? 'text-amber-500' : 'text-emerald-600'
                       }`}>
                         <Bike className="inline h-3 w-3 mr-0.5" />
-                        {isFull ? '마감' : `${remaining}대 남음`}
+                        {isFull ? t('sold_out') : t('remaining', { n: remaining })}
                       </span>
                     </button>
                   )
@@ -262,7 +242,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
         <div>
           <label className="flex items-center gap-2 text-sm font-bold text-zinc-700 mb-2">
             <Users className="h-4 w-4 text-emerald-600" />
-            인원 선택
+            {t('participants')}
           </label>
           <div className="flex items-center justify-between rounded-xl border border-zinc-300 px-3 py-2">
             <button
@@ -272,7 +252,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
             >
               <Minus className="h-4 w-4" />
             </button>
-            <span className="text-base font-bold text-zinc-900">{participants}명</span>
+            <span className="text-base font-bold text-zinc-900">{t('people_count', { n: participants })}</span>
             <button
               onClick={() => setParticipants(Math.min(tour.max_participants, participants + 1))}
               className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 hover:bg-zinc-200 disabled:opacity-40 transition-colors"
@@ -283,39 +263,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
           </div>
         </div>
 
-        {/* Add-ons */}
-        <div>
-          <p className="text-sm font-bold text-zinc-700 mb-2">선택 추가</p>
-          <div className="space-y-2">
-            {ADDONS.map(({ id, icon: Icon, label, desc, price }) => (
-              <button
-                key={id}
-                onClick={() => toggleAddon(id)}
-                className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                  addons.has(id)
-                    ? 'border-emerald-500 bg-emerald-50'
-                    : 'border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${addons.has(id) ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-100 text-zinc-500'}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-bold ${addons.has(id) ? 'text-emerald-700' : 'text-zinc-800'}`}>{label}</p>
-                  <p className="text-xs text-zinc-400 truncate">{desc}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={`text-sm font-bold ${addons.has(id) ? 'text-emerald-600' : 'text-zinc-600'}`}>
-                    +{formatPrice(price)}
-                  </p>
-                  {id === 'guide' && <p className="text-[10px] text-zinc-400">그룹당</p>}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 크레딧 사용 */}
+        {/* Credits */}
         {MOCK_CREDIT_BALANCE > 0 && (
           <button
             type="button"
@@ -328,8 +276,8 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
               <Gift className="h-4 w-4" />
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-bold ${useCredits ? 'text-amber-700' : 'text-zinc-800'}`}>크레딧 사용</p>
-              <p className="text-xs text-zinc-400">보유: {formatPrice(MOCK_CREDIT_BALANCE)}</p>
+              <p className={`text-sm font-bold ${useCredits ? 'text-amber-700' : 'text-zinc-800'}`}>{t('use_credits')}</p>
+              <p className="text-xs text-zinc-400">{t('credit_balance', { balance: formatPrice(MOCK_CREDIT_BALANCE) })}</p>
             </div>
             {useCredits && <span className="text-sm font-bold text-amber-600">-{formatPrice(creditDiscount)}</span>}
           </button>
@@ -338,47 +286,47 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
         {/* Total */}
         <div className="rounded-xl bg-zinc-50 p-3 space-y-1.5">
           <div className="flex items-center justify-between text-sm text-zinc-500">
-            <span>기본 ({formatPrice(tour.price_krw)} × {participants}명)</span>
+            <span>{t('base', { price: formatPrice(tour.price_krw), n: participants })}</span>
             <span>{formatPrice(tour.price_krw * participants)}</span>
           </div>
           {bikeExtra > 0 && (
             <div className="flex items-center justify-between text-sm text-zinc-500">
-              <span>{selectedBike?.label} 추가금</span>
+              <span>{t('bike_surcharge', { label: t(selectedBike!.labelKey) })}</span>
               <span>+{formatPrice(bikeExtra)}</span>
             </div>
           )}
           {optionFlatFee > 0 && (
             <div className="flex items-center justify-between text-sm text-zinc-500">
-              <span>용달비 (1회)</span>
+              <span>{t('transport_fee_one')}</span>
               <span>+{formatPrice(optionFlatFee)}</span>
             </div>
           )}
-          {ADDONS.filter((a) => addons.has(a.id)).map((a) => (
-            <div key={a.id} className="flex items-center justify-between text-sm text-zinc-500">
-              <span>{a.label}</span>
-              <span>+{formatPrice(a.id === 'guide' ? a.price : a.price * participants)}</span>
-            </div>
-          ))}
           {useCredits && creditDiscount > 0 && (
             <div className="flex items-center justify-between text-sm text-amber-600">
-              <span>크레딧 할인</span>
+              <span>{t('credit_discount')}</span>
               <span>-{formatPrice(creditDiscount)}</span>
             </div>
           )}
           <div className="border-t border-zinc-200 pt-1.5 flex items-center justify-between font-black text-zinc-900">
-            <span>총 금액</span>
+            <span>{t('total')}</span>
             <span className="text-lg text-emerald-700">{formatPrice(total)}</span>
           </div>
         </div>
 
         <Button className="w-full" size="lg" onClick={handleBooking}>
-          예약하기
+          {t('book_now')}
         </Button>
 
         <p className="text-center text-xs text-zinc-400">
-          예약 확정 전까지 결제가 청구되지 않습니다
+          {t('no_charge_until')}
         </p>
 
+        {/* Payment notice */}
+        <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-3 space-y-1.5">
+          <p className="text-xs font-bold text-zinc-700">{t('payment_title')}</p>
+          <p className="text-xs text-zinc-600">{t('payment_bank_only')}</p>
+          <p className="text-[11px] text-zinc-400">{t('payment_coming')}</p>
+        </div>
       </div>
     </div>
   )

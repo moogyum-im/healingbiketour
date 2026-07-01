@@ -2,103 +2,70 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { User, Mail, Phone, FileText, CheckCircle, Gift } from 'lucide-react'
+import { User, Mail, Phone, FileText, CheckCircle, Building2, CopyCheck, Copy, CreditCard, Globe } from 'lucide-react'
 import { createBrowserClient } from '@supabase/ssr'
 import Button from '@/components/ui/Button'
 import { formatPrice, formatDuration, formatDistance } from '@/utils/format'
 import Image from 'next/image'
-import { createBooking, confirmBooking, confirmBookingWithCredit } from '@/lib/actions/booking'
+import { createBooking } from '@/lib/actions/booking'
 import toast from 'react-hot-toast'
 import type { Tour } from '@/types'
-import { PAYMENT_LABEL_CARD, PAYMENT_LABEL_PAYPAL } from '@/lib/constants'
-
-const ALL_PAYMENT_METHODS = [
-  { ...PAYMENT_LABEL_CARD,   channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD,   currency: 'CURRENCY_KRW' as const },
-  { ...PAYMENT_LABEL_PAYPAL, channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_PAYPAL, currency: 'CURRENCY_USD' as const },
-]
-
-// 채널키가 설정된 수단만 노출
-const PAYMENT_METHODS = ALL_PAYMENT_METHODS.filter(
-  (m) => m.channelKey && !m.channelKey.startsWith('your_')
-)
+import { BANK_ACCOUNT, BANK_ACCOUNT_FOREIGN } from '@/lib/constants'
+import { useLocale } from 'next-intl'
 
 export default function BookingForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const locale = useLocale()
+  const isKo = locale === 'ko'
+  const account = isKo ? BANK_ACCOUNT : BANK_ACCOUNT_FOREIGN
 
-  const tourId      = searchParams.get('tour') ?? ''
-  const date        = searchParams.get('date') ?? ''
+  const tourId       = searchParams.get('tour') ?? ''
+  const date         = searchParams.get('date') ?? ''
   const participants = Number(searchParams.get('participants') ?? 1)
-  const resumeId    = searchParams.get('resume') ?? ''   // 결제 이어하기
 
   const [tour, setTour] = useState<Tour | null>(null)
   const [tourLoading, setTourLoading] = useState(true)
-  const [resumeAmount, setResumeAmount] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<string>(PAYMENT_METHODS[0]?.id ?? 'card')
+  const [submitted, setSubmitted] = useState(false)
   const [selectedOptionId, setSelectedOptionId] = useState<string>('')
   const [form, setForm] = useState({ name: '', email: '', phone: '', requests: '' })
-  const [creditBalance, setCreditBalance] = useState(0)
-  const [useCredit, setUseCredit] = useState(false)
-  const [creditToUse, setCreditToUse] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const [nationality, setNationality] = useState<'korean' | 'foreign'>('korean')
+  const [passportNumber, setPassportNumber] = useState('')
 
-  // 투어 정보 로드 (또는 resume 시 기존 예약 로드)
   useEffect(() => {
-    const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-    if (resumeId) {
-      // 기존 예약 정보로 투어/금액 복원
-      sb.from('bookings')
-        .select('total_amount_krw, contact_name, contact_email, contact_phone, tours(*)')
-        .eq('id', resumeId)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setTour((data as any).tours as Tour)
-            setResumeAmount(data.total_amount_krw)
-            setForm({
-              name: data.contact_name ?? '',
-              email: data.contact_email ?? '',
-              phone: data.contact_phone ?? '',
-              requests: '',
-            })
-          }
-          setTourLoading(false)
-        })
-    } else {
-      if (!tourId) { setTourLoading(false); return }
-      sb.from('tours').select('*').eq('id', tourId).maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setTour(data as unknown as Tour)
-            setSelectedOptionId((data as any).options?.[0]?.id ?? '')
-          }
-          setTourLoading(false)
-        })
-    }
-  }, [tourId, resumeId])
+    if (!tourId) { setTourLoading(false); return }
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    sb.from('tours').select('*').eq('id', tourId).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setTour(data as unknown as Tour)
+          setSelectedOptionId((data as any).options?.[0]?.id ?? '')
+        }
+        setTourLoading(false)
+      })
+  }, [tourId])
 
-  // 로그인 유저 정보 + 크레딧 잔액 로드
   useEffect(() => {
-    const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const sb = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      if (!resumeId) {
-        const meta = user.user_metadata ?? {}
-        setForm((prev) => ({
-          ...prev,
-          name:  prev.name  || meta.full_name || meta.name || '',
-          email: prev.email || user.email || '',
-          phone: prev.phone || meta.phone || '',
-        }))
-      }
-      // 크레딧 잔액 조회
-      sb.from('credit_balances')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single()
-        .then(({ data }) => setCreditBalance(data?.balance ?? 0))
+      const meta = user.user_metadata ?? {}
+      setForm((prev) => ({
+        ...prev,
+        name:  prev.name  || meta.full_name || meta.name || '',
+        email: prev.email || user.email || '',
+        phone: prev.phone || meta.phone || '',
+      }))
     })
-  }, [resumeId])
+  }, [])
 
   if (tourLoading) {
     return <div className="py-20 text-center text-zinc-400 text-sm">로딩 중...</div>
@@ -114,14 +81,14 @@ export default function BookingForm() {
   }
 
   const selectedOption = tour.options?.find((o) => o.id === selectedOptionId)
-  const total = resumeAmount ?? (
-    (tour.price_krw + (selectedOption?.price_modifier_krw ?? 0)) * participants +
+  const total = (tour.price_krw + (selectedOption?.price_modifier_krw ?? 0)) * participants +
     (selectedOption?.flat_fee_krw ?? 0)
-  )
-  const maxCredit = Math.min(creditBalance, total)
-  const actualCreditToUse = useCredit ? Math.min(creditToUse, maxCredit) : 0
-  const payAmount = total - actualCreditToUse
-  const isFullCredit = payAmount <= 0
+
+  const copyAccount = () => {
+    navigator.clipboard.writeText(account.account)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -131,123 +98,121 @@ export default function BookingForm() {
     }
     setLoading(true)
     try {
-      let bookingId: string
-
-      if (resumeId) {
-        // 기존 예약 이어하기 — 새로 생성하지 않음
-        bookingId = resumeId
-      } else {
-        const bookingResult = await createBooking({
-          tourId: tour.id,
-          participants,
-          date,
-          contactName: form.name,
-          contactEmail: form.email,
-          contactPhone: form.phone,
-          specialRequests: form.requests,
-          totalAmountKrw: total,
-        })
-        if (bookingResult.error || !bookingResult.data) {
-          toast.error(bookingResult.error ?? '예약 생성 실패')
-          setLoading(false)
-          return
-        }
-        bookingId = bookingResult.data.id
-      }
-
-      // 크레딧 전액 결제 (PortOne 생략)
-      if (isFullCredit) {
-        const confirmResult = await confirmBookingWithCredit(bookingId, actualCreditToUse)
-        if (confirmResult.error) {
-          toast.error(confirmResult.error)
-          setLoading(false)
-          return
-        }
-        toast.success('크레딧으로 결제가 완료되었습니다!')
-        router.push('/my?booked=success')
+      if (nationality === 'foreign' && !passportNumber.trim()) {
+        toast.error(isKo ? '여권 번호를 입력해주세요.' : 'Please enter your passport number.')
         return
       }
-
-      const selectedMethod = PAYMENT_METHODS.find((m) => m.id === paymentMethod)
-      if (!selectedMethod?.channelKey) {
-        toast.error('결제 수단 채널키가 설정되지 않았습니다. 관리자에게 문의해 주세요.')
-        setLoading(false)
-        return
-      }
-      const isPayPal = paymentMethod === 'paypal'
-      // PayPal은 USD 센트 단위 (1 USD = 1,350 KRW 기준)
-      const payAmountUsd = Math.round((payAmount / 1350) * 100)
-
-      const PortOne = await import('@portone/browser-sdk/v2')
-      const response = await PortOne.requestPayment({
-        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
-        channelKey: selectedMethod?.channelKey ?? '',
-        // KG 이니시스 oid 최대 40자 제한 — UUID 하이픈 제거 후 bk 접두사 사용 (34자)
-        // resume 재시도는 r + 압축 UUID 22자 + timestamp 7자 = 30자
-        paymentId: resumeId
-          ? `r${bookingId.replace(/-/g, '').slice(0, 22)}${Date.now().toString(36).slice(-7)}`
-          : `bk${bookingId.replace(/-/g, '')}`,
-        orderName: tour.title,
-        totalAmount: isPayPal ? payAmountUsd : payAmount,
-        currency: isPayPal ? 'CURRENCY_USD' : 'CURRENCY_KRW',
-        payMethod: paymentMethod === 'card' ? 'CARD' : isPayPal ? 'PAYPAL' : 'EASY_PAY',
-        customer: {
-          fullName: form.name,
-          email: form.email,
-          phoneNumber: form.phone.replace(/-/g, ''),
-        },
-        customData: { bookingId },
+      const result = await createBooking({
+        tourId: tour.id,
+        participants,
+        date,
+        contactName: form.name,
+        contactEmail: form.email,
+        contactPhone: form.phone,
+        specialRequests: form.requests,
+        totalAmountKrw: total,
+        nationality,
+        passportNumber: nationality === 'foreign' ? passportNumber.trim() : undefined,
       })
-
-      if (!response || response.code !== undefined) {
-        toast.error((response as { message?: string })?.message ?? '결제에 실패했습니다.')
-        setLoading(false)
+      if (result.error || !result.data) {
+        toast.error(result.error ?? '예약 신청 실패')
         return
       }
-
-      const confirmResult = await confirmBooking(bookingId, {
-        paymentId: (response as { paymentId: string }).paymentId,
-        method: paymentMethod,
-        creditAmount: actualCreditToUse,
-      })
-
-      if (confirmResult.error) {
-        toast.error(confirmResult.error)
-        setLoading(false)
-        return
-      }
-
-      toast.success('결제가 완료되었습니다! 카카오톡 알림을 확인해주세요.')
-      router.push('/my?booked=success')
+      setSubmitted(true)
     } catch (err) {
-      console.error('[BookingForm] 결제 오류:', err)
-      toast.error(err instanceof Error ? err.message : '결제 처리 중 오류가 발생했습니다.')
+      console.error('[BookingForm]', err)
+      toast.error(err instanceof Error ? err.message : '오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
+  /* ── 신청 완료 화면 ── */
+  if (submitted) {
+    return (
+      <div className="mx-auto max-w-lg py-8">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle className="h-8 w-8 text-emerald-600" />
+            </div>
+          </div>
+          <h2 className="text-xl font-black text-zinc-900">
+            {isKo ? '예약 신청이 완료되었습니다!' : 'Booking Request Submitted!'}
+          </h2>
+          <p className="text-sm text-zinc-600 leading-relaxed">
+            {isKo
+              ? <>아래 계좌로 입금해 주시면 확인 후 예약이 확정됩니다.<br />입금자명을 <span className="font-bold text-zinc-800">{form.name}</span>으로 해주세요.</>
+              : <>Please transfer to the account below. Your booking will be confirmed once payment is verified.<br />Use your name <span className="font-bold text-zinc-800">{form.name}</span> as the sender name.</>
+            }
+          </p>
+        </div>
+
+        {/* 계좌 안내 */}
+        <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-6 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-zinc-800">
+            <Building2 className="h-4 w-4 text-emerald-600" />
+            {isKo ? '입금 계좌 안내' : 'Bank Transfer Details'}
+          </div>
+          <div className="rounded-xl bg-zinc-50 p-4 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-zinc-500">{isKo ? '은행' : 'Bank'}</span>
+              <span className="font-semibold text-zinc-800">{account.bank}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-500">{isKo ? '계좌번호' : 'Account No.'}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-zinc-900 text-base tracking-wide">{account.account}</span>
+                <button
+                  onClick={copyAccount}
+                  className="flex items-center gap-1 rounded-lg bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-200 transition-colors"
+                >
+                  {copied ? <CopyCheck className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? (isKo ? '복사됨' : 'Copied') : (isKo ? '복사' : 'Copy')}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-500">{isKo ? '예금주' : 'Account Holder'}</span>
+              <span className="font-semibold text-zinc-800">{account.holder}</span>
+            </div>
+            <div className="flex justify-between border-t border-zinc-200 pt-2 mt-2">
+              <span className="text-zinc-500">{isKo ? '입금 금액' : 'Amount'}</span>
+              <span className="font-black text-emerald-700 text-base">{formatPrice(total)}</span>
+            </div>
+          </div>
+          <p className="text-xs text-zinc-400 text-center leading-relaxed">
+            {isKo
+              ? <>입금 확인 후 카카오톡 또는 이메일로 예약 확정 안내를 드립니다.<br />문의: <a href="tel:02-6265-2600" className="text-emerald-600 font-semibold">02-6265-2600</a></>
+              : <>Your booking will be confirmed by email once payment is received.<br />Inquiries: <a href="mailto:healingbiketour@gmail.com" className="text-emerald-600 font-semibold">healingbiketour@gmail.com</a></>
+            }
+          </p>
+        </div>
+
+        <Button
+          className="mt-6 w-full"
+          variant="outline"
+          onClick={() => router.push('/tours')}
+        >
+          {isKo ? '투어 목록으로 돌아가기' : 'Back to Tours'}
+        </Button>
+      </div>
+    )
+  }
+
+  /* ── 예약 입력 폼 ── */
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* 폼 */}
       <div className="lg:col-span-2">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* resume 배너 */}
-          {resumeId && (
-            <div className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-              <CheckCircle className="h-4 w-4 text-amber-500 shrink-0" />
-              이전에 중단된 예약입니다. 결제 수단을 선택하고 결제를 완료해주세요.
-            </div>
-          )}
-
           {/* 예약자 정보 */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-            <h2 className="text-lg font-bold text-zinc-900 mb-4">예약자 정보</h2>
+            <h2 className="text-lg font-bold text-zinc-900 mb-4">{isKo ? '예약자 정보' : 'Booking Information'}</h2>
             <div className="space-y-4">
               {[
-                { key: 'name',  label: '예약자 이름', icon: User,     type: 'text',  placeholder: '홍길동' },
-                { key: 'email', label: '이메일',       icon: Mail,     type: 'email', placeholder: 'example@email.com' },
-                { key: 'phone', label: '연락처',       icon: Phone,    type: 'tel',   placeholder: '010-0000-0000' },
+                { key: 'name',  label: isKo ? '예약자 이름' : 'Full Name', icon: User,  type: 'text',  placeholder: isKo ? '홍길동' : 'John Doe' },
+                { key: 'email', label: isKo ? '이메일' : 'Email',        icon: Mail,  type: 'email', placeholder: 'example@email.com' },
+                { key: 'phone', label: isKo ? '연락처' : 'Phone',        icon: Phone, type: 'tel',   placeholder: isKo ? '010-0000-0000' : '+82-10-0000-0000' },
               ].map(({ key, label, icon: Icon, type, placeholder }) => (
                 <div key={key}>
                   <label className="mb-1.5 block text-sm font-medium text-zinc-700">{label}</label>
@@ -264,30 +229,98 @@ export default function BookingForm() {
                   </div>
                 </div>
               ))}
-              {!resumeId && (
+              <div>
+                {/* 국적 선택 */}
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-                    특별 요청사항 <span className="text-zinc-400 font-normal">(선택)</span>
+                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    {isKo ? '국적' : 'Nationality'}
                   </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
-                    <textarea
-                      rows={3}
-                      placeholder="알레르기, 신체적 제한 사항 등을 알려주세요"
-                      value={form.requests}
-                      onChange={(e) => setForm({ ...form, requests: e.target.value })}
-                      className="w-full rounded-xl border border-zinc-300 pl-10 pr-4 py-2.5 text-sm resize-none focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { val: 'korean' as const, icon: CreditCard, label: isKo ? '내국인 (한국인)' : 'Korean Citizen' },
+                      { val: 'foreign' as const, icon: Globe,      label: isKo ? '외국인' : 'Foreign Visitor' },
+                    ].map(({ val, icon: Icon, label }) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setNationality(val)}
+                        className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-semibold transition-all ${
+                          nationality === val
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                            : 'border-zinc-200 text-zinc-600 hover:border-zinc-300'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
+
+                {/* 신분증 / 여권 안내 */}
+                {nationality === 'korean' ? (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800">
+                    <CreditCard className="h-4 w-4 shrink-0 mt-0.5 text-blue-500" />
+                    <p>
+                      {isKo
+                        ? '보험 적용을 위해 투어 당일 반드시 신분증(주민등록증 또는 운전면허증)을 지참해 주세요.'
+                        : 'Please bring your national ID (resident registration card or driver\'s license) on the day of the tour for insurance purposes.'
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                      <Globe className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
+                      <p>
+                        {isKo
+                          ? '보험 적용을 위해 투어 당일 반드시 여권을 지참해 주세요.'
+                          : 'Please bring your passport on the day of the tour for insurance purposes.'
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+                        {isKo ? '여권 번호' : 'Passport Number'}{' '}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                        <input
+                          type="text"
+                          required
+                          placeholder={isKo ? 'M12345678' : 'M12345678'}
+                          value={passportNumber}
+                          onChange={(e) => setPassportNumber(e.target.value.toUpperCase())}
+                          className="w-full rounded-xl border border-zinc-300 pl-10 pr-4 py-2.5 text-sm font-mono uppercase focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+                  {isKo ? '특별 요청사항' : 'Special Requests'}{' '}
+                  <span className="text-zinc-400 font-normal">{isKo ? '(선택)' : '(optional)'}</span>
+                </label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                  <textarea
+                    rows={3}
+                    placeholder={isKo ? '알레르기, 신체적 제한 사항 등을 알려주세요' : 'Allergies, physical limitations, or other requests'}
+                    value={form.requests}
+                    onChange={(e) => setForm({ ...form, requests: e.target.value })}
+                    className="w-full rounded-xl border border-zinc-300 pl-10 pr-4 py-2.5 text-sm resize-none focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 코스 옵션 (신규 예약만) */}
-          {!resumeId && tour.options && tour.options.length > 0 && (
+          {/* 코스 옵션 */}
+          {tour.options && tour.options.length > 0 && (
             <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-              <h2 className="text-lg font-bold text-zinc-900 mb-4">코스 옵션</h2>
+              <h2 className="text-lg font-bold text-zinc-900 mb-4">{isKo ? '코스 옵션' : 'Course Option'}</h2>
               <div className="space-y-3">
                 {tour.options.map((option) => (
                   <label
@@ -317,112 +350,68 @@ export default function BookingForm() {
             </div>
           )}
 
-          {/* 크레딧 사용 */}
-          {creditBalance > 0 && (
-            <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Gift className="h-5 w-5 text-emerald-600" />
-                  <h2 className="text-lg font-bold text-zinc-900">크레딧 사용</h2>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-zinc-500">보유 {creditBalance.toLocaleString()}C</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = !useCredit
-                      setUseCredit(next)
-                      if (next) setCreditToUse(maxCredit)
-                      else setCreditToUse(0)
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      useCredit ? 'bg-emerald-500' : 'bg-zinc-200'
-                    }`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                      useCredit ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </label>
+          {/* 결제 수단 — 계좌 입금 고정 안내 */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Building2 className="h-5 w-5 text-emerald-600" />
+              <h2 className="text-lg font-bold text-zinc-900">{isKo ? '결제 수단' : 'Payment Method'}</h2>
+            </div>
+            <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600">
+                  <CheckCircle className="h-3.5 w-3.5 text-white" />
+                </span>
+                <span className="text-sm font-bold text-emerald-800">{isKo ? '계좌 입금' : 'Bank Transfer'}</span>
               </div>
-              {useCredit && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={0}
-                      max={maxCredit}
-                      step={100}
-                      value={creditToUse}
-                      onChange={(e) => setCreditToUse(Number(e.target.value))}
-                      className="flex-1 accent-emerald-500"
-                    />
-                    <span className="text-sm font-bold text-emerald-700 w-24 text-right shrink-0">
-                      {actualCreditToUse.toLocaleString()}C 사용
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
+              <div className="rounded-lg bg-white border border-emerald-200 p-3 space-y-1.5 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">{isKo ? '은행' : 'Bank'}</span>
+                  <span className="font-semibold text-zinc-800">{account.bank}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-zinc-500">{isKo ? '계좌번호' : 'Account No.'}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-zinc-900 tracking-wide">{account.account}</span>
                     <button
                       type="button"
-                      onClick={() => setCreditToUse(maxCredit)}
-                      className="text-emerald-600 font-semibold hover:underline"
+                      onClick={copyAccount}
+                      className="flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
                     >
-                      전액 사용 ({maxCredit.toLocaleString()}C)
+                      {copied ? <CopyCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {copied ? (isKo ? '복사됨' : 'Copied') : (isKo ? '복사' : 'Copy')}
                     </button>
-                    <span className="text-zinc-500">
-                      할인 후 결제금액:{' '}
-                      <span className="font-bold text-zinc-900">
-                        {isFullCredit ? '0원 (크레딧 전액 결제)' : `${payAmount.toLocaleString()}원`}
-                      </span>
-                    </span>
                   </div>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">{isKo ? '예금주' : 'Account Holder'}</span>
+                  <span className="font-semibold text-zinc-800">{account.holder}</span>
+                </div>
+              </div>
+              <p className="text-xs text-emerald-700 font-medium">
+                {isKo
+                  ? '입금 확인 후 예약이 확정됩니다 — 카카오톡 또는 이메일로 안내해 드립니다.'
+                  : 'Your booking is confirmed once payment is verified — we\'ll notify you by email.'
+                }
+              </p>
             </div>
-          )}
-
-          {/* 결제 수단 */}
-          <div className={`rounded-2xl border border-zinc-200 bg-white p-6 ${isFullCredit ? 'opacity-40 pointer-events-none' : ''}`}>
-            <h2 className="text-lg font-bold text-zinc-900 mb-4">결제 수단</h2>
-            <div className="space-y-2">
-              {PAYMENT_METHODS.map((method) => (
-                <label
-                  key={method.id}
-                  className={`flex items-start gap-4 cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                    paymentMethod === method.id
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value={method.id}
-                    checked={paymentMethod === method.id}
-                    onChange={() => setPaymentMethod(method.id)}
-                    className="mt-0.5 accent-emerald-600"
-                  />
-                  <div>
-                    <p className={`text-sm font-bold ${paymentMethod === method.id ? 'text-emerald-800' : 'text-zinc-800'}`}>
-                      {method.label}
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-0.5">{method.sublabel}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
+            <p className="mt-3 text-xs text-zinc-400 text-center">
+              {isKo
+                ? '카카오페이 · 네이버페이 · 토스 · 신용카드 · PayPal — 준비 중'
+                : 'KakaoPay · NaverPay · Toss · Credit Card · PayPal — Coming Soon'
+              }
+            </p>
           </div>
 
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            {isFullCredit
-              ? `크레딧 ${actualCreditToUse.toLocaleString()}C로 결제하기`
-              : `${formatPrice(payAmount)} 결제하기${actualCreditToUse > 0 ? ` (${actualCreditToUse.toLocaleString()}C 할인)` : ''}`
-            }
+            {isKo ? '예약 신청하기' : 'Submit Booking Request'}
           </Button>
 
           <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
             <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-            결제 완료 후 카카오톡으로 예약 확인 알림이 발송됩니다.
+            {isKo
+              ? '신청 후 계좌로 입금하시면 확인 후 예약이 확정됩니다.'
+              : 'Transfer to the account above — your booking is confirmed once payment is verified.'
+            }
           </div>
         </form>
       </div>
@@ -439,10 +428,10 @@ export default function BookingForm() {
             <h3 className="font-bold text-zinc-900">{tour.title}</h3>
             <div className="text-sm text-zinc-500 space-y-1.5">
               {[
-                ['날짜', date ? new Date(date + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }) : (resumeId ? '기존 예약' : '-')],
-                ['인원', `${participants}명`],
-                ['소요 시간', formatDuration(tour.duration_hours)],
-                ['거리', formatDistance(tour.distance_km)],
+                [isKo ? '날짜' : 'Date', date ? new Date(date + 'T00:00:00').toLocaleDateString(isKo ? 'ko-KR' : 'en-US', { month: 'long', day: 'numeric', weekday: 'short' }) : '-'],
+                [isKo ? '인원' : 'Participants', isKo ? `${participants}명` : `${participants} person${participants > 1 ? 's' : ''}`],
+                [isKo ? '소요 시간' : 'Duration', formatDuration(tour.duration_hours)],
+                [isKo ? '거리' : 'Distance', formatDistance(tour.distance_km)],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between">
                   <span>{label}</span>
@@ -450,24 +439,10 @@ export default function BookingForm() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-zinc-100 pt-4 space-y-2">
-              {actualCreditToUse > 0 && (
-                <div className="flex justify-between text-sm text-emerald-600">
-                  <span className="flex items-center gap-1">
-                    <Gift className="h-3.5 w-3.5" />
-                    크레딧 할인
-                  </span>
-                  <span>-{actualCreditToUse.toLocaleString()}원</span>
-                </div>
-              )}
+            <div className="border-t border-zinc-100 pt-4">
               <div className="flex justify-between font-bold text-zinc-900">
-                <span>총 결제금액</span>
-                <div className="text-right">
-                  {actualCreditToUse > 0 && (
-                    <p className="text-xs text-zinc-400 line-through font-normal">{formatPrice(total)}</p>
-                  )}
-                  <span className="text-emerald-700">{isFullCredit ? '0원' : formatPrice(payAmount)}</span>
-                </div>
+                <span>{isKo ? '총 결제금액' : 'Total'}</span>
+                <span className="text-emerald-700">{formatPrice(total)}</span>
               </div>
             </div>
           </div>
