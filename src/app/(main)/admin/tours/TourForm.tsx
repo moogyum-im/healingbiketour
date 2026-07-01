@@ -271,7 +271,7 @@ export default function TourForm({ initialData }: TourFormProps) {
             <input type="number" required step="any" min="0" value={form.distance_km} onChange={set('distance_km')} className={inputCls} placeholder="20" />
           </div>
           <div>
-            <label className={labelCls}>최대 인원 *</label>
+            <label className={labelCls}>최소 인원 *</label>
             <input type="number" required min="1" max="50" value={form.max_participants} onChange={set('max_participants')} className={inputCls} placeholder="12" />
           </div>
         </div>
