@@ -1,4 +1,5 @@
 import HeroSection from '@/components/home/HeroSection'
+import TourListSection from '@/components/home/TourListSection'
 import RentalCarousel from '@/components/home/RentalCarousel'
 import ReviewSection from '@/components/home/ReviewSection'
 import VideoHighlightSection from '@/components/home/VideoHighlightSection'
@@ -20,7 +21,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection tours={activeTours} />
+      <HeroSection />
+      <TourListSection tours={activeTours} />
       <RentalCarousel />
 
       {/* Why Us */}

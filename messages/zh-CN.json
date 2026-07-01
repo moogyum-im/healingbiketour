@@ -10,13 +10,21 @@
     "consulting_desc": "直接联系专业顾问",
     "all_tours": "全部旅行团",
     "hangang": "汉江骑行游",
+    "hangang_desc": "堂山站出发 · 鸟岛 · 盘浦 · 汝矣岛 · 21km",
     "ara": "汉江阿拉水路骑行游",
+    "ara_desc": "堂山站出发 · 首尔植物园 · 井水津（西海）",
     "haengju": "幸州山城骑行游",
+    "haengju_desc": "堂山站出发 · 兰芝公园 · 幸州山城 · 32km",
     "chuncheon": "春川骑行游",
+    "chuncheon_desc": "堂山站出发 · 두물머리 · 자라섬 · 南怡岛 · 春川",
     "olympic": "奥林匹克公园骑行游",
+    "olympic_desc": "堂山站出发 · 汝矣岛 · 盘浦大桥 · 蚕室 · 奥林匹克公园",
     "peacenuri": "和平努里骑行路线",
+    "peacenuri_desc": "临津阁出发 · 和平努里公园 · 汉滩江",
     "national": "国土纵横骑行",
+    "national_desc": "阿拉水路出发 · 洛东江河口 · 633km",
     "imjingak": "临津阁骑行游",
+    "imjingak_desc": "堂山站出发 · 幸州山城 · 临津阁 · 60km",
     "about": "关于我们",
     "booking_check": "预约查询",
     "login": "登录",
@@ -47,7 +55,9 @@
     "stat_video_val": "附赠",
     "stat_video_label": "行程录像",
     "stat_insurance_val": "可购",
-    "stat_insurance_label": "旅行保险"
+    "stat_insurance_label": "旅行保险",
+    "tour_btn": "预约行程",
+    "rental_btn": "租借自行车"
   },
   "category": {
     "title": "行程路线",
@@ -170,7 +180,8 @@
     "category_cultural": "文化之旅",
     "category_night": "夜间骑行",
     "category_family": "家庭游览",
-    "category_national": "国土纵贯路线"
+    "category_national": "国土纵贯路线",
+    "per_person": "每人"
   },
   "booking": {
     "per_person": "每人",

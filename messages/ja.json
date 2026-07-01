@@ -10,13 +10,21 @@
     "consulting_desc": "担当者に直接お問い合わせ",
     "all_tours": "全てのツアー",
     "hangang": "漢江バイクツアー",
+    "hangang_desc": "堂山駅出発 · セッカン · 盤浦 · 汝矣島 · 21km",
     "ara": "漢江アラ水路バイクツアー",
+    "ara_desc": "堂山駅出発 · ソウル植物園 · チョンソジン（西海）",
     "haengju": "行州山城バイクツアー",
+    "haengju_desc": "堂山駅出発 · 蘭芝公園 · 行州山城 · 32km",
     "chuncheon": "春川バイクツアー",
+    "chuncheon_desc": "堂山駅出発 · 두물머리 · 자라섬 · 남이섬 · 春川",
     "olympic": "オリンピック公園バイクツアー",
+    "olympic_desc": "堂山駅出発 · 汝矣島 · 盤浦大橋 · 蠶室 · 五輪公園",
     "peacenuri": "ピースヌリサイクリングルート",
+    "peacenuri_desc": "臨津閣出発 · 平和ヌリ公園 · 漢灘江",
     "national": "国土縦断サイクリング",
+    "national_desc": "アラ水路出発 · 洛東江河口 · 633km",
     "imjingak": "臨津閣バイクツアー",
+    "imjingak_desc": "堂山駅出発 · 行州山城 · 臨津閣 · 60km",
     "about": "会社紹介",
     "booking_check": "予約確認",
     "login": "ログイン",
@@ -47,7 +55,9 @@
     "stat_video_val": "動画付き",
     "stat_video_label": "ドラレコ録画",
     "stat_insurance_val": "加入可",
-    "stat_insurance_label": "旅行保険"
+    "stat_insurance_label": "旅行保険",
+    "tour_btn": "ツアーを予約する",
+    "rental_btn": "自転車をレンタルする"
   },
   "category": {
     "title": "ツアーコース",
@@ -172,7 +182,8 @@
     "category_cultural": "文化ツアー",
     "category_night": "ナイトライド",
     "category_family": "ファミリーツアー",
-    "category_national": "国土縦断ルート"
+    "category_national": "国土縦断ルート",
+    "per_person": "1人あたり"
   },
   "booking": {
     "per_person": "1人あたり",

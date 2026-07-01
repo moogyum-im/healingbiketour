@@ -12,13 +12,21 @@
     "consulting_desc": "전문 상담사에게 직접 문의하세요",
     "all_tours": "전체 투어",
     "hangang": "한강 바이크투어",
+    "hangang_desc": "당산역 출발 · 샛강 · 반포 · 여의도 · 21km",
     "ara": "한강 아라뱃길 바이크투어",
+    "ara_desc": "당산역 출발 · 서울식물원 · 정서진(서해)",
     "haengju": "행주산성 바이크투어",
+    "haengju_desc": "당산역 출발 · 난지공원 · 행주산성 · 32km",
     "chuncheon": "춘천 바이크투어",
+    "chuncheon_desc": "당산역 출발 · 두물머리 · 자라섬 · 남이섬 · 춘천",
     "olympic": "올림픽공원 바이크투어",
+    "olympic_desc": "당산역 출발 · 여의도 · 반포대교 · 잠실 · 올림픽공원",
     "peacenuri": "평화누리 자전거길",
+    "peacenuri_desc": "임진각 출발 · 평화누리공원 · 한탄강",
     "national": "국토종주 바이크투어",
+    "national_desc": "인천 아라뱃길 출발 · 낙동강 하구 · 633km",
     "imjingak": "임진각 바이크투어",
+    "imjingak_desc": "당산역 출발 · 행주산성 · 임진각 · 60km",
     "about": "회사소개",
     "booking_check": "예약확인",
     "login": "로그인",
@@ -49,7 +57,9 @@
     "stat_video_val": "영상 제공",
     "stat_video_label": "블랙박스 녹화",
     "stat_insurance_val": "가입 가능",
-    "stat_insurance_label": "여행자 보험"
+    "stat_insurance_label": "여행자 보험",
+    "tour_btn": "투어 예약하기",
+    "rental_btn": "자전거 렌탈예약하기"
   },
   "category": {
     "title": "투어 선택하기",
@@ -174,7 +184,8 @@
     "category_cultural": "문화 투어",
     "category_night": "야간 투어",
     "category_family": "가족 투어",
-    "category_national": "국토종주"
+    "category_national": "국토종주",
+    "per_person": "1인 기준"
   },
   "booking": {
     "per_person": "1인 기준",

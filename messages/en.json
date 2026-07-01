@@ -12,13 +12,21 @@
     "consulting_desc": "Chat directly with our team",
     "all_tours": "All Tours",
     "hangang": "Han River Bike Tour",
+    "hangang_desc": "Departs Dangsan · Saetgang · Banpo · Yeouido · 21km",
     "ara": "Han River Ara Waterway Tour",
+    "ara_desc": "Departs Dangsan · Seoul Botanic Park · Jeongseonjin (West Sea)",
     "haengju": "Haengju Fortress Bike Tour",
+    "haengju_desc": "Departs Dangsan · Nanji Park · Haengju Fortress · 32km",
     "chuncheon": "Chuncheon Bike Tour",
+    "chuncheon_desc": "Departs Dangsan · Dumulmeori · Jaraseom · Nami Island · Chuncheon",
     "olympic": "Olympic Park Bike Tour",
+    "olympic_desc": "Departs Dangsan · Yeouido · Banpo Bridge · Jamsil · Olympic Park",
     "peacenuri": "Peace Nuri Cycling Route",
+    "peacenuri_desc": "Departs Imjingak · Peace Nuri Park · Hantan River",
     "national": "National Cycling Route",
+    "national_desc": "Departs Ara Waterway · Nakdonggang Estuary · 633km",
     "imjingak": "Imjingak Bike Tour",
+    "imjingak_desc": "Departs Dangsan · Haengju Fortress · Imjingak · 60km",
     "about": "About Us",
     "booking_check": "My Bookings",
     "login": "Log In",
@@ -49,7 +57,9 @@
     "stat_video_val": "Included",
     "stat_video_label": "Ride Footage",
     "stat_insurance_val": "Available",
-    "stat_insurance_label": "Travel Insurance"
+    "stat_insurance_label": "Travel Insurance",
+    "tour_btn": "Book a Tour",
+    "rental_btn": "Rent a Bike"
   },
   "category": {
     "title": "Choose Your Tour",
@@ -174,7 +184,8 @@
     "category_cultural": "Cultural Tour",
     "category_night": "Night Ride",
     "category_family": "Family Tour",
-    "category_national": "National Route"
+    "category_national": "National Route",
+    "per_person": "Per person"
   },
   "booking": {
     "per_person": "Per person",

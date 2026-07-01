@@ -28,10 +28,26 @@ const difficultyColor: Record<string, string> = {
   hard:     'bg-red-500/90',
 }
 
+const TOUR_NAV_MAP: Record<string, string> = {
+  'hangang-healing-tour': 'hangang',
+  'ara-waterway-tour': 'ara',
+  'haengju-fortress-tour': 'haengju',
+  'chuncheon-lakeside-tour': 'chuncheon',
+  'olympic-park-tour': 'olympic',
+  'peace-nuri-1': 'peacenuri',
+  'national-cycling-route': 'national',
+  'imjingak-tour': 'imjingak',
+}
+
 export default async function TourCard({ tour, className }: TourCardProps) {
   const t = await getTranslations('tourDetail')
+  const tNav = await getTranslations('nav')
   const locale = await getLocale()
   const isKo = locale === 'ko'
+
+  const navKey = TOUR_NAV_MAP[tour.slug]
+  const displayTitle = navKey ? tNav(navKey) : tour.title
+  const displayDesc = navKey ? tNav(`${navKey}_desc`) : tour.short_description
 
   if (!tour.is_active) {
     return (
@@ -43,7 +59,7 @@ export default async function TourCard({ tour, className }: TourCardProps) {
       >
         <Image
           src={tour.thumbnail_url}
-          alt={tour.title}
+          alt={displayTitle}
           fill
           className="object-cover grayscale"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -56,7 +72,7 @@ export default async function TourCard({ tour, className }: TourCardProps) {
           </div>
         </div>
         <div className="absolute bottom-4 left-4">
-          <h3 className="text-base font-bold text-white/60">{tour.title}</h3>
+          <h3 className="text-base font-bold text-white/60">{displayTitle}</h3>
         </div>
       </div>
     )
@@ -73,7 +89,7 @@ export default async function TourCard({ tour, className }: TourCardProps) {
       {/* 배경 이미지 */}
       <Image
         src={tour.thumbnail_url}
-        alt={tour.title}
+        alt={displayTitle}
         fill
         className="object-cover transition-transform duration-500 group-hover:scale-105"
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -109,9 +125,9 @@ export default async function TourCard({ tour, className }: TourCardProps) {
         </div>
 
         <h3 className="text-base font-bold text-white line-clamp-2 group-hover:text-emerald-300 transition-colors">
-          {tour.title}
+          {displayTitle}
         </h3>
-        <p className="mt-0.5 text-xs text-white/70 line-clamp-1">{tour.short_description}</p>
+        <p className="mt-0.5 text-xs text-white/70 line-clamp-1">{displayDesc}</p>
 
         <div className="mt-2.5 flex items-end justify-between">
           <div className="flex items-center gap-3 text-xs text-white/60">

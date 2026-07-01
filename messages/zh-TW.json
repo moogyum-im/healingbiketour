@@ -10,13 +10,21 @@
     "consulting_desc": "直接聯絡專業顧問",
     "all_tours": "全部旅遊團",
     "hangang": "漢江旅遊團",
+    "hangang_desc": "堂山站出發 · 鳥島 · 盤浦 · 汝矣島 · 21km",
     "ara": "漢江阿拉水路旅遊團",
+    "ara_desc": "堂山站出發 · 首爾植物園 · 井水津（西海）",
     "haengju": "幸州山城旅遊團",
+    "haengju_desc": "堂山站出發 · 蘭芝公園 · 幸州山城 · 32km",
     "chuncheon": "春川旅遊團",
+    "chuncheon_desc": "堂山站出發 · 두물머리 · 자라섬 · 南怡島 · 春川",
     "olympic": "奧林匹克公園旅遊團",
+    "olympic_desc": "堂山站出發 · 汝矣島 · 盤浦大橋 · 蠶室 · 奧林匹克公園",
     "peacenuri": "和平努里騎行路線",
+    "peacenuri_desc": "臨津閣出發 · 和平努里公園 · 漢灘江",
     "national": "國土縱橫騎行",
+    "national_desc": "阿拉水路出發 · 洛東江河口 · 633km",
     "imjingak": "臨津閣旅遊團",
+    "imjingak_desc": "堂山站出發 · 幸州山城 · 臨津閣 · 60km",
     "about": "關於我們",
     "booking_check": "預約查詢",
     "login": "登入",
@@ -47,7 +55,9 @@
     "stat_video_val": "附贈",
     "stat_video_label": "行程錄影",
     "stat_insurance_val": "可購",
-    "stat_insurance_label": "旅遊保險"
+    "stat_insurance_label": "旅遊保險",
+    "tour_btn": "預約行程",
+    "rental_btn": "租借自行車"
   },
   "category": {
     "title": "行程路線",
@@ -170,7 +180,8 @@
     "category_cultural": "文化之旅",
     "category_night": "夜間騎行",
     "category_family": "家庭遊覽",
-    "category_national": "國土縱貫路線"
+    "category_national": "國土縱貫路線",
+    "per_person": "每人"
   },
   "booking": {
     "per_person": "每人",
