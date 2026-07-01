@@ -42,7 +42,7 @@ const TRANSLATED_FAQS: Record<string, TranslatedFaq[]> = {
     { id: 'e8', category: '예약·결제', question: 'Is there a group discount?', answer: 'Yes, discounts are available for groups of 5 or more. Contact us via 1:1 inquiry or email for details.' },
     { id: 'e9', category: '취소·환불', question: 'What if the weather is bad on tour day?', answer: 'In the event of heavy rain, typhoon, or extreme weather, the tour is cancelled with a full refund or free rescheduling. Light rain tours typically proceed as scheduled.' },
     { id: 'e10', category: '취소·환불', question: 'What is the cancellation and refund policy?', answer: '7+ days before: 100% refund. 3–6 days before: 50% refund. 2 days before – day of: No refund. No-show: No refund.' },
-    { id: 'e11', category: '안전·보험', question: 'Is bicycle insurance covered?', answer: 'Operator liability insurance is in place, but it covers third-party liability, not personal medical costs. We strongly recommend purchasing travel insurance.' },
+    { id: 'e11', category: '안전·보험', question: 'Is bicycle insurance covered?', answer: 'Operator liability insurance applies to cover accidents that occur during the tour. It covers third-party damages only — not personal injury or medical costs for participants. Solo (self-guided) riders are not covered under any policy. We strongly recommend purchasing personal travel insurance before your ride.' },
     { id: 'e12', category: '투어 안내', question: 'Can I receive photos or video from the tour?', answer: 'Yes! A dashcam is mounted on every bike, and full footage is delivered to you after the tour, free of charge.' },
   ],
   ja: [
@@ -56,7 +56,7 @@ const TRANSLATED_FAQS: Record<string, TranslatedFaq[]> = {
     { id: 'j8', category: '예약·결제', question: 'グループ割引はありますか？', answer: '5名以上のグループには割引があります。詳細は1対1お問い合わせまたはメールでご連絡ください。' },
     { id: 'j9', category: '취소·환불', question: '当日の天気が悪い場合はどうなりますか？', answer: '大雨・台風・悪天候の場合はツアーをキャンセルし、全額返金または無料で日程変更いたします。小雨の場合は通常通り実施します。' },
     { id: 'j10', category: '취소·환불', question: 'キャンセル・返金ポリシーはどうなっていますか？', answer: '7日前以上：全額返金。3〜6日前：50%返金。前日〜当日：返金なし。無断キャンセル：返金なし。' },
-    { id: 'j11', category: '안전·보험', question: '自転車保険は適用されますか？', answer: '事業者賠償責任保険に加入していますが、対人・対物賠償のみカバーしています。参加者ご自身の医療費は含まれませんので、旅行保険へのご加入をお勧めします。' },
+    { id: 'j11', category: '안전·보험', question: '自転車保険は適用されますか？', answer: 'ツアー中に発生した事故に備え、事業者賠償責任保険が適用されます。参加者ご自身の傷害・医療費は補償対象外です。単独ライディングは保険の適用外となります。旅行保険はご自身での加入をお勧めします。' },
     { id: 'j12', category: '투어 안내', question: 'ツアー中の写真や動画はもらえますか？', answer: 'はい！全ての自転車にドライブレコーダーを搭載しており、ツアー終了後に全映像を無料でお届けします。' },
   ],
   'zh-CN': [
@@ -70,7 +70,7 @@ const TRANSLATED_FAQS: Record<string, TranslatedFaq[]> = {
     { id: 'c8', category: '예약·결제', question: '有团体优惠吗？', answer: '5人及以上团体可享折扣优惠。请通过1对1咨询或邮件联系我们了解详情。' },
     { id: 'c9', category: '취소·환불', question: '当天天气不好怎么办？', answer: '遇大雨、台风或极端天气时，行程将取消并提供全额退款或免费改期。小雨通常照常进行。' },
     { id: 'c10', category: '취소·환불', question: '取消及退款政策是什么？', answer: '提前7天以上：全额退款。提前3-6天：退50%。提前2天至当天：不退款。无故缺席：不退款。' },
-    { id: 'c11', category: '안전·보험', question: '自行车保险包含在内吗？', answer: '运营方已投保赔偿责任险，但仅涵盖第三方责任，不包含参与者本人的医疗费用。建议自行购买旅行保险。' },
+    { id: 'c11', category: '안전·보험', question: '自行车保险包含在内吗？', answer: '为应对行程中发生的事故，运营方赔偿责任险适用于本次活动。仅涵盖第三方责任，不包含参与者本人的人身伤害或医疗费用。单独骑行不在保险保障范围内。建议个人自行购买旅行保险。' },
     { id: 'c12', category: '투어 안내', question: '可以收到行程中的照片或视频吗？', answer: '可以！每辆自行车都安装了行车记录仪，行程结束后将免费为您提供全程视频。' },
   ],
   'zh-TW': [
@@ -84,7 +84,7 @@ const TRANSLATED_FAQS: Record<string, TranslatedFaq[]> = {
     { id: 't8', category: '예약·결제', question: '有團體優惠嗎？', answer: '5人及以上團體可享折扣優惠。請透過1對1諮詢或電子郵件聯繫我們了解詳情。' },
     { id: 't9', category: '취소·환불', question: '當天天氣不好怎麼辦？', answer: '遇大雨、颱風或極端天氣時，行程將取消並提供全額退款或免費改期。小雨通常照常進行。' },
     { id: 't10', category: '취소·환불', question: '取消及退款政策是什麼？', answer: '提前7天以上：全額退款。提前3-6天：退50%。提前2天至當天：不退款。無故缺席：不退款。' },
-    { id: 't11', category: '안전·보험', question: '自行車保險包含在內嗎？', answer: '營運方已投保賠償責任險，但僅涵蓋第三方責任，不包含參與者本人的醫療費用。建議自行購買旅遊保險。' },
+    { id: 't11', category: '안전·보험', question: '自行車保險包含在內嗎？', answer: '為應對行程中發生的事故，營運方賠償責任險適用於本次活動。僅涵蓋第三方責任，不包含參與者本人的人身傷害或醫療費用。單獨騎行不在保險保障範圍內。建議個人自行購買旅遊保險。' },
     { id: 't12', category: '투어 안내', question: '可以收到行程中的照片或影片嗎？', answer: '可以！每輛自行車都安裝了行車記錄器，行程結束後將免費為您提供全程影片。' },
   ],
 }

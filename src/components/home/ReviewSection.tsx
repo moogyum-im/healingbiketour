@@ -1,10 +1,10 @@
 'use client'
 
-import { HardHat, Smartphone, Video, Wrench, Film, Users, ShieldCheck } from 'lucide-react'
+import { HardHat, Smartphone, Video, Wrench, Film, ShieldCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
-const SERVICE_ICONS = [HardHat, Smartphone, Video, Film, Wrench, Users, ShieldCheck]
-const SERVICE_KEYS = ['helmet', 'phone', 'blackbox', 'video', 'pump', 'guide', 'insurance'] as const
+const SERVICE_ICONS = [HardHat, Smartphone, Video, Film, Wrench, ShieldCheck]
+const SERVICE_KEYS = ['helmet', 'phone', 'blackbox', 'video', 'pump', 'insurance'] as const
 
 export default function ReviewSection() {
   const t = useTranslations('services')
