@@ -56,12 +56,12 @@ export default function TourFilters({ currentParams }: TourFiltersProps) {
     !!currentParams.minPrice ||
     !!currentParams.maxPrice
 
-  const priceRanges = [
+  const priceRanges: { key: string; min?: string; max?: string }[] = [
     { key: 'price_under30', max: '30000' },
     { key: 'price_30_50', min: '30000', max: '50000' },
     { key: 'price_50_80', min: '50000', max: '80000' },
     { key: 'price_over80', min: '80000' },
-  ] as const
+  ]
 
   return (
     <div className="space-y-6">
