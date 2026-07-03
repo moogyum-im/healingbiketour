@@ -33,24 +33,13 @@ export default async function TourReviewsPage({ params }: PageProps) {
   // reviews 쿼리 - profiles join 없이 (RLS 무관하게 동작)
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('id, rating, content, images, created_at, user_id')
+    .select('id, rating, content, images, created_at')
     .eq('tour_id', dbTour.id)
     .order('created_at', { ascending: false })
 
   const all = reviews ?? []
   const total = all.length
   const avgRating = total > 0 ? all.reduce((s, r) => s + r.rating, 0) / total : 0
-
-  // 프로필 이름 별도 조회 (실패해도 익명으로 폴백)
-  const userIds = [...new Set(all.map((r) => r.user_id).filter(Boolean))]
-  let profileMap: Record<string, string> = {}
-  if (userIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, name')
-      .in('id', userIds)
-    profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.name ?? '익명']))
-  }
 
   const dist = [5, 4, 3, 2, 1].map((star) => ({
     star,
@@ -131,31 +120,24 @@ export default async function TourReviewsPage({ params }: PageProps) {
         ) : (
           <div className="space-y-5">
             {all.map((review) => {
-              const name = profileMap[review.user_id] ?? '익명'
               const images: string[] = (review.images as string[] | null) ?? []
               return (
                 <div key={review.id} className="rounded-2xl border border-zinc-200 bg-white p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
-                      {name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-800">{name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3.5 w-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200'}`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-zinc-400">
-                          {new Date(review.created_at).toLocaleDateString('ko-KR', {
-                            year: 'numeric', month: 'long', day: 'numeric',
-                          })}
-                        </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-200'}`}
+                          />
+                        ))}
                       </div>
+                      <span className="text-xs text-zinc-400">
+                        {new Date(review.created_at).toLocaleDateString('ko-KR', {
+                          year: 'numeric', month: 'long', day: 'numeric',
+                        })}
+                      </span>
                     </div>
                   </div>
                   <p className="text-sm text-zinc-700 leading-relaxed">{review.content}</p>

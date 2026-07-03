@@ -18,7 +18,7 @@ export default async function ReviewsPreview({ tourId, slug }: ReviewsPreviewPro
   const [{ data: reviews }, { data: stats }] = await Promise.all([
     supabase
       .from('reviews')
-      .select('id, rating, content, created_at, user_id')
+      .select('id, rating, content, created_at')
       .eq('tour_id', tourId)
       .order('created_at', { ascending: false })
       .limit(3),
@@ -28,16 +28,6 @@ export default async function ReviewsPreview({ tourId, slug }: ReviewsPreviewPro
   const all = stats ?? []
   const total = all.length
   const avgRating = total > 0 ? all.reduce((s, r) => s + r.rating, 0) / total : 0
-
-  const userIds = [...new Set((reviews ?? []).map((r) => r.user_id).filter(Boolean))]
-  let profileMap: Record<string, string> = {}
-  if (userIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, name')
-      .in('id', userIds)
-    profileMap = Object.fromEntries((profiles ?? []).map((p) => [p.id, p.name ?? t('anon')]))
-  }
 
   return (
     <section className="mt-10">
@@ -77,7 +67,6 @@ export default async function ReviewsPreview({ tourId, slug }: ReviewsPreviewPro
         <>
           <div className="space-y-3">
             {(reviews ?? []).map((review) => {
-              const name = profileMap[review.user_id] ?? t('anon')
               const dateStr = new Date(review.created_at).toLocaleDateString(locale, {
                 month: 'short',
                 day: 'numeric',
@@ -94,7 +83,7 @@ export default async function ReviewsPreview({ tourId, slug }: ReviewsPreviewPro
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-zinc-700 line-clamp-1">{review.content}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">{name} · {dateStr}</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">{dateStr}</p>
                   </div>
                 </div>
               )
