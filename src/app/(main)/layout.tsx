@@ -30,6 +30,12 @@ export const metadata: Metadata = {
     url: 'https://healingbiketour.kr',
     siteName: '힐링바이크투어',
   },
+  verification: {
+    // 네이버 서치어드바이저 소유권 인증 코드 (https://searchadvisor.naver.com 에서 발급)
+    other: {
+      'naver-site-verification': '24ab50e249c85cbc0750605063e37d886a67afa6',
+    },
+  },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
