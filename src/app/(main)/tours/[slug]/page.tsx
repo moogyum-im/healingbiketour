@@ -233,6 +233,22 @@ export default async function TourDetailPage({ params }: PageProps) {
             {tour.slug === 'national-cycling-route' && <NationalRouteSection />}
             {tour.slug === 'olympic-park-tour' && <OlympicRouteSection />}
 
+            {/* Photo Gallery (for tours without a dedicated RouteSection) */}
+            {tour.images && tour.images.length > 1 && ![
+              'hangang-healing-tour','ara-waterway-tour','haengju-fortress-tour',
+              'peace-nuri-1','chuncheon-lakeside-tour','national-cycling-route','olympic-park-tour',
+            ].includes(tour.slug) && (
+              <section className="mt-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {tour.images.map((src, i) => (
+                    <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-zinc-100">
+                      <Image src={src} alt={`${tour.title} ${i + 1}`} fill className="object-cover" sizes="(max-width:640px) 50vw, 33vw" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Highlights */}
             <section className="mt-8">
               <h2 className="text-xl font-bold text-zinc-900 mb-3">{t('highlights')}</h2>

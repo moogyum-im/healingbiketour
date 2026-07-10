@@ -126,6 +126,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                           'national-cycling-route': t('national'),
                           'imjingak-tour': t('imjingak'),
                           'yangsu-tour': t('yangsu'),
+                          'boramae-park-tour': t('boramae'),
                           'cheonggyecheon-tour': t('cheonggyecheon'),
                           'seoul-forest-tour': t('seoulforest'),
                         }
@@ -217,6 +218,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                               'national-cycling-route': t('national'),
                               'imjingak-tour': t('imjingak'),
                               'yangsu-tour': t('yangsu'),
+                              'boramae-park-tour': t('boramae'),
                               'cheonggyecheon-tour': t('cheonggyecheon'),
                               'seoul-forest-tour': t('seoulforest'),
                             }
@@ -487,6 +489,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       'national-cycling-route': t('national'),
                       'imjingak-tour': t('imjingak'),
                       'yangsu-tour': t('yangsu'),
+                      'boramae-park-tour': t('boramae'),
                       'cheonggyecheon-tour': t('cheonggyecheon'),
                       'seoul-forest-tour': t('seoulforest'),
                     }
