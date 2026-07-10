@@ -14,6 +14,7 @@ import {
   ChevronLeft,
 } from 'lucide-react'
 import { mockTours } from '@/lib/mock-data'
+import { fetchTourBySlug, } from '@/lib/tours'
 import { localizeTour } from '@/lib/tour-i18n'
 import Badge from '@/components/ui/Badge'
 import BookingWidget from '@/components/tours/BookingWidget'
@@ -99,11 +100,7 @@ export default async function TourDetailPage({ params }: PageProps) {
   const mockTour = mockTours.find((t) => t.slug === slug)
 
   const supabase = await createClient()
-  const { data: dbTour } = await supabase
-    .from('tours')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle()
+  const dbTour = await fetchTourBySlug(slug)
 
   // mock에도 DB에도 없으면 404
   if (!dbTour && !mockTour) notFound()

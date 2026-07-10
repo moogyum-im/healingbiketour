@@ -125,6 +125,9 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                           'peace-nuri-1': t('peacenuri'),
                           'national-cycling-route': t('national'),
                           'imjingak-tour': t('imjingak'),
+                          'yangsu-tour': t('yangsu'),
+                          'cheonggyecheon-tour': t('cheonggyecheon'),
+                          'seoul-forest-tour': t('seoulforest'),
                         }
                         const displayTitle = tourTitleMap[tour.slug] ?? tour.title
                         return (
@@ -213,6 +216,9 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                               'peace-nuri-1': t('peacenuri'),
                               'national-cycling-route': t('national'),
                               'imjingak-tour': t('imjingak'),
+                              'yangsu-tour': t('yangsu'),
+                              'cheonggyecheon-tour': t('cheonggyecheon'),
+                              'seoul-forest-tour': t('seoulforest'),
                             }
                             const displayTitle2 = tourTitleMap2[tour.slug] ?? tour.title
                             return (
@@ -480,6 +486,9 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       'peace-nuri-1': t('peacenuri'),
                       'national-cycling-route': t('national'),
                       'imjingak-tour': t('imjingak'),
+                      'yangsu-tour': t('yangsu'),
+                      'cheonggyecheon-tour': t('cheonggyecheon'),
+                      'seoul-forest-tour': t('seoulforest'),
                     }
                     return (
                       <Link key={tour.slug} href={`/tours/${tour.slug}`} className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>

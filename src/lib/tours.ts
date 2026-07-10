@@ -1,7 +1,14 @@
-import { unstable_noStore as noStore } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { mockTours } from '@/lib/mock-data'
 import type { Tour } from '@/types'
+
+function createPublicClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 function dbRowToTour(t: Record<string, unknown>, fallback?: Tour): Tour {
   return {
@@ -38,34 +45,45 @@ function dbRowToTour(t: Record<string, unknown>, fallback?: Tour): Tour {
   }
 }
 
+// 5분 캐시: Supabase 장애 시 마지막 성공 데이터 제공, 관리자 저장 시 즉시 무효화
+const fetchDbTours = unstable_cache(
+  async () => {
+    const supabase = createPublicClient()
+    const { data, error } = await supabase.from('tours').select('*')
+    if (error) throw error
+    return data ?? []
+  },
+  ['tours'],
+  { revalidate: 300, tags: ['tours'] }
+)
+
+export const fetchTourBySlug = unstable_cache(
+  async (slug: string) => {
+    const supabase = createPublicClient()
+    const { data, error } = await supabase.from('tours').select('*').eq('slug', slug).maybeSingle()
+    if (error) throw error
+    return data
+  },
+  ['tour-by-slug'],
+  { revalidate: 300, tags: ['tours'] }
+)
+
 export async function getToursWithOverrides(): Promise<Tour[]> {
-  noStore()
-  try {
-    const supabase = await createClient()
+  const dbTours = await fetchDbTours()
 
-    const { data: dbTours } = await supabase
-      .from('tours')
-      .select('*')
+  const dbBySlug = Object.fromEntries(dbTours.map((t) => [t.slug as string, t]))
+  const mockSlugs = new Set(mockTours.map((t) => t.slug))
 
-    const dbBySlug = Object.fromEntries((dbTours ?? []).map((t) => [t.slug as string, t]))
-    const mockSlugs = new Set(mockTours.map((t) => t.slug))
+  const mergedMock: Tour[] = mockTours.map((tour) => {
+    const db = dbBySlug[tour.slug]
+    return db ? dbRowToTour(db, tour) : tour
+  })
 
-    // mock 투어: DB에 있으면 DB 전체 데이터 사용 (관리자 편집 완전 반영)
-    //            DB에 없으면 mock 원본 그대로
-    const mergedMock: Tour[] = mockTours.map((tour) => {
-      const db = dbBySlug[tour.slug]
-      return db ? dbRowToTour(db, tour) : tour
-    })
+  const newDbTours: Tour[] = dbTours
+    .filter((t) => !mockSlugs.has(t.slug as string))
+    .map((t) => dbRowToTour(t))
 
-    // DB에만 있는 신규 투어 (mock에 없는 slug)
-    const newDbTours: Tour[] = (dbTours ?? [])
-      .filter((t) => !mockSlugs.has(t.slug as string))
-      .map((t) => dbRowToTour(t))
-
-    const all = [...mergedMock, ...newDbTours]
-    all.sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
-    return all
-  } catch {
-    return mockTours
-  }
+  const all = [...mergedMock, ...newDbTours]
+  all.sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999))
+  return all
 }

@@ -6,6 +6,7 @@ import { Camera, Pencil, Check, X, Loader2, ChevronDown, ChevronUp } from 'lucid
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { revalidateTours } from '@/lib/actions/admin'
 
 interface Props {
   slug: string
@@ -30,6 +31,7 @@ async function saveTourUpdate(slug: string, patch: Record<string, unknown>) {
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('slug', slug)
   if (error) throw error
+  await revalidateTours(slug)
 }
 
 // ── 사진 교체 버튼 ──────────────────────────────────────────
