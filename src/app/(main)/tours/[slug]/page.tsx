@@ -26,6 +26,10 @@ import PeaceNuriRouteSection from '@/components/tours/PeaceNuriRouteSection'
 import ChuncheonRouteSection from '@/components/tours/ChuncheonRouteSection'
 import NationalRouteSection from '@/components/tours/NationalRouteSection'
 import OlympicRouteSection from '@/components/tours/OlympicRouteSection'
+import YangsuRouteSection from '@/components/tours/YangsuRouteSection'
+import SeoulForestRouteSection from '@/components/tours/SeoulForestRouteSection'
+import CheonggyecheonRouteSection from '@/components/tours/CheonggyecheonRouteSection'
+import BoramaeParkRouteSection from '@/components/tours/BoramaeParkRouteSection'
 import DrinkingWarning from '@/components/ui/DrinkingWarning'
 import TourAdminEditor from '@/components/admin/TourAdminEditor'
 import ReviewsPreview from '@/components/tours/ReviewsPreview'
@@ -232,22 +236,10 @@ export default async function TourDetailPage({ params }: PageProps) {
             {tour.slug === 'chuncheon-lakeside-tour' && <ChuncheonRouteSection />}
             {tour.slug === 'national-cycling-route' && <NationalRouteSection />}
             {tour.slug === 'olympic-park-tour' && <OlympicRouteSection />}
-
-            {/* Photo Gallery (for tours without a dedicated RouteSection) */}
-            {tour.images && tour.images.length > 1 && ![
-              'hangang-healing-tour','ara-waterway-tour','haengju-fortress-tour',
-              'peace-nuri-1','chuncheon-lakeside-tour','national-cycling-route','olympic-park-tour',
-            ].includes(tour.slug) && (
-              <section className="mt-8">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {tour.images.map((src, i) => (
-                    <div key={i} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-zinc-100">
-                      <Image src={src} alt={`${tour.title} ${i + 1}`} fill className="object-cover" sizes="(max-width:640px) 50vw, 33vw" />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+            {tour.slug === 'yangsu-tour' && <YangsuRouteSection />}
+            {tour.slug === 'seoul-forest-tour' && <SeoulForestRouteSection />}
+            {tour.slug === 'cheonggyecheon-tour' && <CheonggyecheonRouteSection />}
+            {tour.slug === 'boramae-park-tour' && <BoramaeParkRouteSection />}
 
             {/* Highlights */}
             <section className="mt-8">

@@ -1,17 +1,20 @@
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
 
-export function formatPrice(amount: number, currency: 'KRW' | 'USD' = 'KRW') {
-  if (currency === 'USD') {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount)
-  }
-  return new Intl.NumberFormat('ko-KR', {
+export type Currency = 'KRW' | 'USD' | 'JPY' | 'CNY' | 'TWD'
+
+const CURRENCY_LOCALE: Record<Currency, string> = {
+  KRW: 'ko-KR', USD: 'en-US', JPY: 'ja-JP', CNY: 'zh-CN', TWD: 'zh-TW',
+}
+const CURRENCY_DECIMALS: Record<Currency, number> = {
+  KRW: 0, USD: 2, JPY: 0, CNY: 0, TWD: 0,
+}
+
+export function formatPrice(amount: number, currency: Currency = 'KRW') {
+  return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
     style: 'currency',
-    currency: 'KRW',
-    maximumFractionDigits: 0,
+    currency,
+    maximumFractionDigits: CURRENCY_DECIMALS[currency],
   }).format(amount)
 }
 

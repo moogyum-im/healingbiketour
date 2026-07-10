@@ -8,7 +8,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { Tour } from '@/types'
 import Button from '@/components/ui/Button'
 import CalendarPicker from '@/components/ui/CalendarPicker'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, type Currency } from '@/utils/format'
 
 interface TimeSlot {
   id: string
@@ -33,7 +33,6 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
   const router = useRouter()
   const t = useTranslations('booking')
   const locale = useLocale()
-  const isKo = locale === 'ko'
 
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedSlotId, setSelectedSlotId] = useState('')
@@ -76,6 +75,18 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
   const creditDiscount = useCredits ? Math.min(MOCK_CREDIT_BALANCE, tour.price_krw * participants + bikeExtra + optionFlatFee) : 0
   const total = tour.price_krw * participants + bikeExtra + optionFlatFee - creditDiscount
 
+  const localeCurrency = ({ ko: 'KRW', en: 'USD', ja: 'JPY', 'zh-CN': 'CNY', 'zh-TW': 'TWD' } as Record<string, Currency>)[locale] ?? 'KRW'
+  const krwRate = tour.price_usd ? tour.price_usd / tour.price_krw : 1 / 1350
+  const fxRates: Record<Currency, number> = { KRW: 1, USD: krwRate, JPY: krwRate * 150, CNY: krwRate * 7.2, TWD: krwRate * 32 }
+  const fx = fxRates[localeCurrency]
+
+  const toLocal = (krw: number) => {
+    const amount = (localeCurrency === 'KRW' || localeCurrency === 'JPY')
+      ? Math.round(krw * fx)
+      : Math.round(krw * fx * 100) / 100
+    return formatPrice(amount, localeCurrency)
+  }
+
   const handleBooking = () => {
     if (!selectedDate) {
       alert(t('date_required'))
@@ -100,16 +111,12 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
     router.push(`/booking?${params}`)
   }
 
-  const displayPrice = !isKo && tour.price_usd
-    ? formatPrice(tour.price_usd, 'USD')
-    : formatPrice(tour.price_krw)
-
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-md">
       {/* Price */}
       <div className="mb-5">
         <p className="text-xs text-zinc-400 mb-0.5">{t('per_person')}</p>
-        <p className="text-3xl font-black text-zinc-900">{displayPrice}</p>
+        <p className="text-3xl font-black text-zinc-900">{toLocal(tour.price_krw)}</p>
       </div>
 
       <div className="space-y-5">
@@ -134,7 +141,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                   <span className="font-semibold">{option.label}</span>
                   <span className="text-xs">
                     {option.flat_fee_krw
-                      ? `+${t('transport_fee_one')} ${option.flat_fee_krw.toLocaleString()}`
+                      ? `+${t('transport_fee_one')} ${toLocal(option.flat_fee_krw)}`
                       : t('no_extra')}
                   </span>
                 </button>
@@ -164,7 +171,7 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
                 <span>{t(b.labelKey)}</span>
                 {b.extra > 0 && (
                   <span className={`text-[10px] font-bold ${bikeType === b.id ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                    +{b.extra.toLocaleString()}
+                    +{toLocal(b.extra)}
                   </span>
                 )}
               </button>
@@ -277,39 +284,39 @@ export default function BookingWidget({ tour }: BookingWidgetProps) {
             </div>
             <div className="flex-1">
               <p className={`text-sm font-bold ${useCredits ? 'text-amber-700' : 'text-zinc-800'}`}>{t('use_credits')}</p>
-              <p className="text-xs text-zinc-400">{t('credit_balance', { balance: formatPrice(MOCK_CREDIT_BALANCE) })}</p>
+              <p className="text-xs text-zinc-400">{t('credit_balance', { balance: toLocal(MOCK_CREDIT_BALANCE) })}</p>
             </div>
-            {useCredits && <span className="text-sm font-bold text-amber-600">-{formatPrice(creditDiscount)}</span>}
+            {useCredits && <span className="text-sm font-bold text-amber-600">-{toLocal(creditDiscount)}</span>}
           </button>
         )}
 
         {/* Total */}
         <div className="rounded-xl bg-zinc-50 p-3 space-y-1.5">
           <div className="flex items-center justify-between text-sm text-zinc-500">
-            <span>{t('base', { price: formatPrice(tour.price_krw), n: participants })}</span>
-            <span>{formatPrice(tour.price_krw * participants)}</span>
+            <span>{t('base', { price: toLocal(tour.price_krw), n: participants })}</span>
+            <span>{toLocal(tour.price_krw * participants)}</span>
           </div>
           {bikeExtra > 0 && (
             <div className="flex items-center justify-between text-sm text-zinc-500">
               <span>{t('bike_surcharge', { label: t(selectedBike!.labelKey) })}</span>
-              <span>+{formatPrice(bikeExtra)}</span>
+              <span>+{toLocal(bikeExtra)}</span>
             </div>
           )}
           {optionFlatFee > 0 && (
             <div className="flex items-center justify-between text-sm text-zinc-500">
               <span>{t('transport_fee_one')}</span>
-              <span>+{formatPrice(optionFlatFee)}</span>
+              <span>+{toLocal(optionFlatFee)}</span>
             </div>
           )}
           {useCredits && creditDiscount > 0 && (
             <div className="flex items-center justify-between text-sm text-amber-600">
               <span>{t('credit_discount')}</span>
-              <span>-{formatPrice(creditDiscount)}</span>
+              <span>-{toLocal(creditDiscount)}</span>
             </div>
           )}
           <div className="border-t border-zinc-200 pt-1.5 flex items-center justify-between font-black text-zinc-900">
             <span>{t('total')}</span>
-            <span className="text-lg text-emerald-700">{formatPrice(total)}</span>
+            <span className="text-lg text-emerald-700">{toLocal(total)}</span>
           </div>
         </div>
 
