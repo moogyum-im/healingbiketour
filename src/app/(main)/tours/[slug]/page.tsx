@@ -30,6 +30,7 @@ import YangsuRouteSection from '@/components/tours/YangsuRouteSection'
 import SeoulForestRouteSection from '@/components/tours/SeoulForestRouteSection'
 import CheonggyecheonRouteSection from '@/components/tours/CheonggyecheonRouteSection'
 import BoramaeParkRouteSection from '@/components/tours/BoramaeParkRouteSection'
+import NanjiSkyParkRouteSection from '@/components/tours/NanjiSkyParkRouteSection'
 import DrinkingWarning from '@/components/ui/DrinkingWarning'
 import TourAdminEditor from '@/components/admin/TourAdminEditor'
 import ReviewsPreview from '@/components/tours/ReviewsPreview'
@@ -240,6 +241,7 @@ export default async function TourDetailPage({ params }: PageProps) {
             {tour.slug === 'seoul-forest-tour' && <SeoulForestRouteSection />}
             {tour.slug === 'cheonggyecheon-tour' && <CheonggyecheonRouteSection />}
             {tour.slug === 'boramae-park-tour' && <BoramaeParkRouteSection />}
+            {tour.slug === 'nanji-sky-park-tour' && <NanjiSkyParkRouteSection />}
 
             {/* Highlights */}
             <section className="mt-8">

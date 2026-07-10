@@ -129,6 +129,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                           'boramae-park-tour': t('boramae'),
                           'cheonggyecheon-tour': t('cheonggyecheon'),
                           'seoul-forest-tour': t('seoulforest'),
+                          'nanji-sky-park-tour': t('nanji'),
                         }
                         const displayTitle = tourTitleMap[tour.slug] ?? tour.title
                         return (
@@ -221,6 +222,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                               'boramae-park-tour': t('boramae'),
                               'cheonggyecheon-tour': t('cheonggyecheon'),
                               'seoul-forest-tour': t('seoulforest'),
+                              'nanji-sky-park-tour': t('nanji'),
                             }
                             const displayTitle2 = tourTitleMap2[tour.slug] ?? tour.title
                             return (
@@ -492,6 +494,7 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                       'boramae-park-tour': t('boramae'),
                       'cheonggyecheon-tour': t('cheonggyecheon'),
                       'seoul-forest-tour': t('seoulforest'),
+                      'nanji-sky-park-tour': t('nanji'),
                     }
                     return (
                       <Link key={tour.slug} href={`/tours/${tour.slug}`} className="block rounded-lg px-3 py-2 text-sm text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>
