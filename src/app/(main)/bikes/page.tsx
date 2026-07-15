@@ -214,6 +214,71 @@ export default async function BikesPage() {
         { labelKey: 'spec_lights', value: t('spec_val_led_headlight') },
       ],
     },
+    {
+      id: 'tn8-pro', brand: '모토벨로', model: 'TN8 PRO',
+      tagline: t('tn8_pro_tagline'), description: t('tn8_pro_desc'), forText: t('tn8_pro_for'),
+      photo: null, color: 'from-zinc-700/10 to-transparent', badgeColor: 'bg-zinc-200 text-zinc-700',
+      specs: [
+        { labelKey: 'spec_frame', value: t('spec_val_aluminum_folding') },
+        { labelKey: 'spec_size', value: '20"' },
+        { labelKey: 'spec_motor', value: '500W 허브모터' },
+        { labelKey: 'spec_battery', value: '48V 20Ah 리튬이온' },
+        { labelKey: 'spec_range', value: '최대 130km (완충 기준)' },
+        { labelKey: 'spec_max_speed', value: t('spec_val_speed_25') },
+      ],
+    },
+    {
+      id: 'e-volt', brand: '스마트', model: 'e-volt',
+      tagline: t('e_volt_tagline'), description: t('e_volt_desc'), forText: t('e_volt_for'),
+      photo: null, color: 'from-sky-500/10 to-transparent', badgeColor: 'bg-sky-100 text-sky-700',
+      specs: [
+        { labelKey: 'spec_frame', value: t('spec_val_aluminum_folding') },
+        { labelKey: 'spec_size', value: '16"' },
+        { labelKey: 'spec_motor', value: '350W 허브모터' },
+        { labelKey: 'spec_battery', value: '48V 7.5Ah 리튬이온' },
+        { labelKey: 'spec_range', value: '최대 35km (완충 기준)' },
+        { labelKey: 'spec_max_speed', value: t('spec_val_speed_25') },
+      ],
+    },
+    {
+      id: 'q-tour', brand: 'quali', model: 'q-tour',
+      tagline: t('q_tour_tagline'), description: t('q_tour_desc'), forText: t('q_tour_for'),
+      photo: null, color: 'from-violet-500/10 to-transparent', badgeColor: 'bg-violet-100 text-violet-700',
+      specs: [
+        { labelKey: 'spec_frame', value: t('spec_val_aluminum') },
+        { labelKey: 'spec_size', value: '20"' },
+        { labelKey: 'spec_motor', value: '500W 허브모터' },
+        { labelKey: 'spec_battery', value: '48V 15Ah 리튬이온' },
+        { labelKey: 'spec_range', value: '최대 70km (완충 기준)' },
+        { labelKey: 'spec_max_speed', value: t('spec_val_speed_25') },
+      ],
+    },
+    {
+      id: 'q-max', brand: 'quali', model: 'q-max',
+      tagline: t('q_max_tagline'), description: t('q_max_desc'), forText: t('q_max_for'),
+      photo: null, color: 'from-violet-600/10 to-transparent', badgeColor: 'bg-violet-100 text-violet-700',
+      specs: [
+        { labelKey: 'spec_frame', value: t('spec_val_aluminum') },
+        { labelKey: 'spec_size', value: '20"' },
+        { labelKey: 'spec_motor', value: '500W 허브모터' },
+        { labelKey: 'spec_battery', value: '48V 20Ah 리튬이온' },
+        { labelKey: 'spec_range', value: '최대 90km (완충 기준)' },
+        { labelKey: 'spec_max_speed', value: t('spec_val_speed_25') },
+      ],
+    },
+    {
+      id: 'j2-aeul-pro', brand: 'j2 sport', model: '애울 프로',
+      tagline: t('j2_aeul_pro_tagline'), description: t('j2_aeul_pro_desc'), forText: t('j2_aeul_pro_for'),
+      photo: null, color: 'from-rose-500/10 to-transparent', badgeColor: 'bg-rose-100 text-rose-700',
+      specs: [
+        { labelKey: 'spec_frame', value: t('spec_val_aluminum') },
+        { labelKey: 'spec_size', value: '20"' },
+        { labelKey: 'spec_motor', value: '350W 허브모터' },
+        { labelKey: 'spec_battery', value: '36V 15Ah 리튬이온' },
+        { labelKey: 'spec_range', value: '최대 50km (완충 기준)' },
+        { labelKey: 'spec_max_speed', value: t('spec_val_speed_25') },
+      ],
+    },
   ]
 
   const CATEGORIES = [
