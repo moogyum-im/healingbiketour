@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 
 export async function grantCredit(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
@@ -42,7 +42,7 @@ export async function grantCredit(prevState: unknown, formData: FormData) {
 }
 
 export async function revalidateTours(slug?: string) {
-  revalidateTag('tours', 'max')
+  updateTag('tours')
   revalidatePath('/', 'layout')
   revalidatePath('/tours')
   if (slug) revalidatePath(`/tours/${slug}`)
