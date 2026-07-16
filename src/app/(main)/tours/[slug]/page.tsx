@@ -158,13 +158,7 @@ export default async function TourDetailPage({ params }: PageProps) {
           </Link>
         </div>
         {/* 관리자 전용 인라인 편집 도구 */}
-        <TourAdminEditor
-          slug={tour.slug}
-          currentThumbnail={tour.thumbnail_url}
-          currentTitle={tour.title}
-          currentDescription={tour.description}
-          currentHighlights={tour.highlights}
-        />
+        <TourAdminEditor tour={rawTour} />
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

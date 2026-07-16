@@ -7,13 +7,10 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { revalidateTours } from '@/lib/actions/admin'
+import type { Tour } from '@/types'
 
 interface Props {
-  slug: string
-  currentThumbnail: string
-  currentTitle: string
-  currentDescription: string
-  currentHighlights: string[]
+  tour: Tour
 }
 
 function getSupabase() {
@@ -23,19 +20,46 @@ function getSupabase() {
   )
 }
 
-// tours 테이블 직접 업데이트 (slug 기준)
-async function saveTourUpdate(slug: string, patch: Record<string, unknown>) {
+// tours 테이블 upsert — DB에 없으면 INSERT, 있으면 UPDATE
+async function saveTourUpdate(baseTour: Tour, patch: Record<string, unknown>) {
   const supabase = getSupabase()
+  const payload = {
+    slug:              baseTour.slug,
+    title:             baseTour.title,
+    title_en:          baseTour.title_en ?? null,
+    description:       baseTour.description,
+    short_description: baseTour.short_description,
+    category:          baseTour.category,
+    difficulty:        baseTour.difficulty,
+    duration_hours:    baseTour.duration_hours,
+    distance_km:       baseTour.distance_km,
+    max_participants:  baseTour.max_participants,
+    price_krw:         baseTour.price_krw,
+    price_usd:         baseTour.price_usd ?? null,
+    thumbnail_url:     baseTour.thumbnail_url || null,
+    images:            baseTour.images ?? [],
+    meeting_point:     baseTour.meeting_point,
+    meeting_point_lat: baseTour.meeting_point_lat ?? null,
+    meeting_point_lng: baseTour.meeting_point_lng ?? null,
+    includes:          baseTour.includes ?? [],
+    excludes:          baseTour.excludes ?? [],
+    requirements:      baseTour.requirements ?? [],
+    highlights:        baseTour.highlights ?? [],
+    options:           baseTour.options ?? null,
+    sort_order:        baseTour.sort_order ?? 999,
+    is_active:         baseTour.is_active,
+    updated_at:        new Date().toISOString(),
+    ...patch,
+  }
   const { error } = await supabase
     .from('tours')
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq('slug', slug)
+    .upsert(payload, { onConflict: 'slug' })
   if (error) throw error
-  await revalidateTours(slug)
+  await revalidateTours(baseTour.slug)
 }
 
 // ── 사진 교체 버튼 ──────────────────────────────────────────
-function PhotoEditButton({ slug, onDone }: { slug: string; onDone: () => void }) {
+function PhotoEditButton({ baseTour, onDone }: { baseTour: Tour; onDone: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -46,16 +70,15 @@ function PhotoEditButton({ slug, onDone }: { slug: string; onDone: () => void })
     try {
       const supabase = getSupabase()
       const ext = file.name.split('.').pop()
-      const path = `tours/${slug}/thumbnail.${ext}`
+      const path = `tours/${baseTour.slug}/thumbnail.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('tours')
         .upload(path, file, { upsert: true })
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage.from('tours').getPublicUrl(path)
-      // 캐시 버스팅 쿼리 포함
       const urlWithBuster = `${publicUrl}?t=${Date.now()}`
-      await saveTourUpdate(slug, { thumbnail_url: urlWithBuster })
+      await saveTourUpdate(baseTour, { thumbnail_url: urlWithBuster })
       toast.success('사진이 업데이트됐습니다')
       onDone()
     } catch (err) {
@@ -83,25 +106,26 @@ function PhotoEditButton({ slug, onDone }: { slug: string; onDone: () => void })
 
 // ── 텍스트 편집 패널 ────────────────────────────────────────
 function TextEditPanel({
-  slug, title, description, highlights, onClose, onDone,
+  baseTour, onClose, onDone,
 }: {
-  slug: string; title: string; description: string; highlights: string[]
-  onClose: () => void; onDone: () => void
+  baseTour: Tour
+  onClose: () => void
+  onDone: () => void
 }) {
   const [form, setForm] = useState({
-    title,
-    description,
-    highlights: highlights.join('\n'),
+    title:       baseTour.title,
+    description: baseTour.description,
+    highlights:  baseTour.highlights.join('\n'),
   })
   const [isPending, startTransition] = useTransition()
 
   const handleSave = () => {
     startTransition(async () => {
       try {
-        await saveTourUpdate(slug, {
-          title: form.title,
+        await saveTourUpdate(baseTour, {
+          title:       form.title,
           description: form.description,
-          highlights: form.highlights.split('\n').map(h => h.trim()).filter(Boolean),
+          highlights:  form.highlights.split('\n').map(h => h.trim()).filter(Boolean),
         })
         toast.success('저장됐습니다')
         onDone()
@@ -173,7 +197,7 @@ function TextEditPanel({
 }
 
 // ── 메인 컴포넌트 ───────────────────────────────────────────
-export default function TourAdminEditor(props: Props) {
+export default function TourAdminEditor({ tour }: Props) {
   const { role } = useSession()
   const router = useRouter()
   const [editing, setEditing] = useState(false)
@@ -188,7 +212,7 @@ export default function TourAdminEditor(props: Props) {
       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <PhotoEditButton slug={props.slug} onDone={refresh} />
+            <PhotoEditButton baseTour={tour} onDone={refresh} />
             <button
               onClick={() => setEditing(true)}
               className="flex items-center gap-1.5 rounded-xl bg-black/60 px-3 py-2 text-xs font-bold text-white backdrop-blur-sm hover:bg-blue-600 transition-colors"
@@ -209,10 +233,7 @@ export default function TourAdminEditor(props: Props) {
 
       {editing && (
         <TextEditPanel
-          slug={props.slug}
-          title={props.currentTitle}
-          description={props.currentDescription}
-          highlights={props.currentHighlights}
+          baseTour={tour}
           onClose={() => setEditing(false)}
           onDone={refresh}
         />
