@@ -428,6 +428,12 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
           ) : (
             <>
               <Link
+                href="/booking-lookup"
+                className="rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100"
+              >
+                예약조회
+              </Link>
+              <Link
                 href="/auth/login"
                 className="rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100"
               >
@@ -569,6 +575,14 @@ export default function Header({ tours = [] }: { tours?: Tour[] }) {
                 </>
               ) : (
                 <>
+                  <Link
+                    href="/booking-lookup"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Search className="h-4 w-4" />
+                    예약조회
+                  </Link>
                   <Link
                     href="/auth/login"
                     className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"

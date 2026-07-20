@@ -1,6 +1,6 @@
 {
   "nav": {
-    "tours": "预约旅行团",
+    "tours": "套餐预约",
     "contact": "联系我们",
     "faq": "常见问题",
     "faq_desc": "提前了解您的疑问",
@@ -43,7 +43,7 @@
     "admin": "管理员",
     "logout": "退出登录",
     "logged_in_as": "已登录",
-    "bikes": "自行车介绍",
+    "bikes": "自行车租赁预约",
     "my_page": "我的页面",
     "tour_booking": "旅游预订",
     "active_tours": "进行中的旅游",
@@ -137,9 +137,6 @@
     "rental_subtitle": "挑选喜欢的车型，自由骑行",
     "rental_view_all": "查看全部",
     "rental_cta": "租借自行车",
-    "rental_day_1_2": "1–2天",
-    "rental_day_3_4": "3–4天",
-    "rental_day_5plus": "5天以上",
     "section_rental_title": "租借自行车",
     "section_rental_view": "查看全部",
     "section_rental_book": "租借自行车",
@@ -159,7 +156,10 @@
     "tour4_label": "奥林匹克公园自行车之旅",
     "tour4_desc": "당산역出发 · 汝矣岛·盘浦大桥·蚕室·奥林匹克公园",
     "tour5_label": "春川湖畔自行车之旅",
-    "tour5_desc": "당산역出发 · 두물머리·자라섬·남이섬·春川 · 单程129km"
+    "tour5_desc": "당산역出发 · 두물머리·자라섬·남이섬·春川 · 单程129km",
+    "rental_h24": "24小时",
+    "rental_h48": "48小时",
+    "rental_h72": "72小时"
   },
   "tourDetail": {
     "back_to_list": "返回列表",
@@ -484,7 +484,7 @@
     "error_generic": "发送失败，请重试。"
   },
   "bikes": {
-    "hero_title": "自行车介绍",
+    "hero_title": "自行车租赁预约",
     "hero_subtitle": "公路车·山地车·迷你公路车·电动自行车，随心选择您喜欢的款式。\n无论选择哪款自行车，均标配行车记录仪及旅行影像。",
     "road_label": "公路车",
     "road_desc": "700c车轮，专为平整路面设计",
@@ -585,6 +585,8 @@
     "spec_val_dual_suspension": "前叉 + 座椅双重避震",
     "spec_val_color_lcd": "彩色LCD",
     "spec_val_led_headlight": "LED大灯（转向功能）",
-    "spec_val_consult": "请咨询"
+    "spec_val_consult": "请咨询",
+    "extra_battery_option": "额外电池选项 +{price}",
+    "rental_cta_btn": "预约此车"
   }
 }

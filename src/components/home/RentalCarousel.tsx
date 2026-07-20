@@ -39,9 +39,9 @@ export default function RentalCarousel() {
   const OFFSETS = [0, 195, 345]
 
   const priceTiers = [
-    { labelKey: 'rental_day_1_2' as const, price: bike.day12 },
-    { labelKey: 'rental_day_3_4' as const, price: bike.day34 },
-    { labelKey: 'rental_day_5plus' as const, price: bike.day5plus, highlight: true },
+    { labelKey: 'rental_h24' as const, price: bike.h24 },
+    { labelKey: 'rental_h48' as const, price: bike.h48 },
+    { labelKey: 'rental_h72' as const, price: bike.h72, highlight: true },
   ]
 
   return (

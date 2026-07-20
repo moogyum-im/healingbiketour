@@ -1,6 +1,6 @@
 {
   "nav": {
-    "tours": "預約旅遊團",
+    "tours": "套餐預約",
     "contact": "聯絡我們",
     "faq": "常見問題",
     "faq_desc": "提前了解您的疑問",
@@ -43,7 +43,7 @@
     "admin": "管理員",
     "logout": "登出",
     "logged_in_as": "已登入",
-    "bikes": "自行車介紹",
+    "bikes": "自行車租賃預約",
     "my_page": "我的頁面",
     "tour_booking": "旅遊預訂",
     "active_tours": "進行中的旅遊",
@@ -137,9 +137,6 @@
     "rental_subtitle": "挑選喜愛的車款，自由騎行",
     "rental_view_all": "查看全部",
     "rental_cta": "租借自行車",
-    "rental_day_1_2": "1–2天",
-    "rental_day_3_4": "3–4天",
-    "rental_day_5plus": "5天以上",
     "section_rental_title": "租借自行車",
     "section_rental_view": "查看全部",
     "section_rental_book": "租借自行車",
@@ -159,7 +156,10 @@
     "tour4_label": "奧林匹克公園單車之旅",
     "tour4_desc": "당산역出發 · 汝矣島·盤浦大橋·蠶室·奧林匹克公園",
     "tour5_label": "春川湖畔單車之旅",
-    "tour5_desc": "당산역出發 · 두물머리·자라섬·남이섬·春川 · 單程129km"
+    "tour5_desc": "당산역出發 · 두물머리·자라섬·남이섬·春川 · 單程129km",
+    "rental_h24": "24小時",
+    "rental_h48": "48小時",
+    "rental_h72": "72小時"
   },
   "tourDetail": {
     "back_to_list": "返回列表",
@@ -484,7 +484,7 @@
     "error_generic": "發送失敗，請重試。"
   },
   "bikes": {
-    "hero_title": "自行車介紹",
+    "hero_title": "自行車租賃預約",
     "hero_subtitle": "公路車·登山車·迷你公路車·電動自行車，隨心選擇您喜歡的款式。\n無論選擇哪款自行車，均標配行車記錄器及旅遊影片。",
     "road_label": "公路車",
     "road_desc": "700c車輪，專為平整路面設計",
@@ -585,6 +585,8 @@
     "spec_val_dual_suspension": "前叉 + 座椅雙重避震",
     "spec_val_color_lcd": "彩色LCD",
     "spec_val_led_headlight": "LED大燈（轉向功能）",
-    "spec_val_consult": "請洽詢"
+    "spec_val_consult": "請洽詢",
+    "extra_battery_option": "額外電池選項 +{price}",
+    "rental_cta_btn": "預約此車"
   }
 }

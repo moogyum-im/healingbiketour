@@ -2,12 +2,15 @@
 
 import { useActionState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Bike, Eye, EyeOff, Mail, Lock, User, CheckCircle, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 import Button from '@/components/ui/Button'
 import { signUp, signInWithGoogle, signInWithKakao } from '@/lib/actions/auth'
 
 export default function SignupPage() {
+  const searchParams = useSearchParams()
+  const prefillEmail = searchParams.get('email') ?? ''
   const [showPassword, setShowPassword] = useState(false)
   const [allChecked, setAllChecked] = useState(false)
   const [terms, setTerms] = useState(false)
@@ -117,6 +120,7 @@ export default function SignupPage() {
                 <input
                   type="email" name="email" required
                   placeholder="example@email.com"
+                  defaultValue={prefillEmail}
                   className="w-full rounded-xl border border-zinc-300 pl-10 pr-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>

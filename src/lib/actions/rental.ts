@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { getDailyRate, getRentalPriceByBikeId } from '@/lib/rental-prices'
 
@@ -21,7 +22,6 @@ export async function createRentalBooking(input: CreateRentalBookingInput) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
   const prices = getRentalPriceByBikeId(input.bikeId)
   if (!prices) return { error: '선택한 자전거의 가격 정보를 찾을 수 없습니다.' }
@@ -29,8 +29,13 @@ export async function createRentalBooking(input: CreateRentalBookingInput) {
   const dailyRate = getDailyRate(prices, input.durationDays)
   const totalAmount = dailyRate * input.durationDays
 
+  // 비회원 예약은 RLS 우회를 위해 admin 클라이언트 사용
+  const insertClient = user ? supabase : createAdminClient()
+
+  // 예약번호 생성 — RLS로 안 보이는 예약이 있으면 번호가 중복될 수 있으므로
+  // admin 클라이언트로 전체 예약 수를 정확히 센다
   const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-  const { count } = await supabase
+  const { count } = await createAdminClient()
     .from('rental_bookings')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', new Date().toISOString().split('T')[0])
@@ -38,11 +43,11 @@ export async function createRentalBooking(input: CreateRentalBookingInput) {
   const seq = String((count ?? 0) + 1).padStart(4, '0')
   const bookingNumber = `RN-${today}-${seq}`
 
-  const { data: booking, error } = await supabase
+  const { data: booking, error } = await insertClient
     .from('rental_bookings')
     .insert({
       booking_number: bookingNumber,
-      user_id: user.id,
+      user_id: user?.id ?? null,
       status: input.isBankTransfer ? 'pending_transfer' : 'pending',
       ...(input.isBankTransfer && { payment_method: 'bank_transfer' }),
       bike_id: input.bikeId,
@@ -94,15 +99,14 @@ export async function confirmRentalBooking(bookingId: string, paymentData: {
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
-  const { data: booking } = await supabase
-    .from('rental_bookings')
-    .select('*')
-    .eq('id', bookingId)
-    .eq('user_id', user.id)
-    .single()
+  // 비회원은 admin client로 RLS 우회
+  const dbClient = user ? supabase : createAdminClient()
 
+  let query = dbClient.from('rental_bookings').select('*').eq('id', bookingId)
+  if (user) query = query.eq('user_id', user.id)
+
+  const { data: booking } = await query.single()
   if (!booking) return { error: '예약을 찾을 수 없습니다.' }
 
   // PortOne V2 결제 검증
@@ -115,7 +119,7 @@ export async function confirmRentalBooking(bookingId: string, paymentData: {
   if (payment.status !== 'PAID') return { error: '결제가 완료되지 않았습니다.' }
   if (payment.amount.total !== paymentData.expectedAmount) return { error: '결제 금액이 일치하지 않습니다.' }
 
-  const { error } = await supabase
+  const { error } = await dbClient
     .from('rental_bookings')
     .update({
       status: 'confirmed',

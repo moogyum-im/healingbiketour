@@ -1,6 +1,6 @@
 {
   "nav": {
-    "tours": "Book Now",
+    "tours": "Package Booking",
     "rental": "Bike Rental",
     "rental_desc": "Rent by 24 · 48 · 72 hours",
     "contact": "Contact",
@@ -45,7 +45,7 @@
     "admin": "Admin",
     "logout": "Log Out",
     "logged_in_as": "Logged in",
-    "bikes": "Our Bikes",
+    "bikes": "Bike Rental Booking",
     "my_page": "My Page",
     "tour_booking": "Tour Booking",
     "active_tours": "Available Tours",
@@ -141,9 +141,6 @@
     "rental_subtitle": "Pick from a variety of bikes and ride freely",
     "rental_view_all": "View All",
     "rental_cta": "Rent a Bike",
-    "rental_day_1_2": "1–2 days",
-    "rental_day_3_4": "3–4 days",
-    "rental_day_5plus": "5+ days",
     "section_rental_title": "Rent a Bike",
     "section_rental_view": "View All",
     "section_rental_book": "Rent a Bike",
@@ -163,7 +160,10 @@
     "tour4_label": "Olympic Park Bike Tour",
     "tour4_desc": "Departs Dangsan · Yeouido · Banpo Bridge · Jamsil · Olympic Park",
     "tour5_label": "Chuncheon Lakeside Bike Tour",
-    "tour5_desc": "Departs Dangsan · Dumulmeori · Jaraseom · Nami Island · Chuncheon · 129km one-way"
+    "tour5_desc": "Departs Dangsan · Dumulmeori · Jaraseom · Nami Island · Chuncheon · 129km one-way",
+    "rental_h24": "24 hrs",
+    "rental_h48": "48 hrs",
+    "rental_h72": "72 hrs"
   },
   "tourDetail": {
     "back_to_list": "All Tours",
@@ -488,7 +488,7 @@
     "error_generic": "Failed to send. Please try again."
   },
   "bikes": {
-    "hero_title": "Our Bikes",
+    "hero_title": "Bike Rental Booking",
     "hero_subtitle": "Choose from road, MTB, mini-road or e-bike.\nEvery bike includes dashcam + tour footage as standard.",
     "road_label": "Road Bike",
     "road_desc": "700c wheels, built for smooth pavement",
@@ -589,6 +589,8 @@
     "spec_val_dual_suspension": "Front fork + seat dual suspension",
     "spec_val_color_lcd": "Color LCD",
     "spec_val_led_headlight": "LED headlight (turn signal)",
-    "spec_val_consult": "Please enquire"
+    "spec_val_consult": "Please enquire",
+    "extra_battery_option": "Extra battery option +{price}",
+    "rental_cta_btn": "Book This Bike"
   }
 }

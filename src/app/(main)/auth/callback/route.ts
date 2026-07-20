@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { linkGuestBookingsToUser } from '@/lib/actions/guest'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -28,6 +29,12 @@ export async function GET(request: NextRequest) {
       console.error('[Auth Callback] verifyOtp error:', error)
       return NextResponse.redirect(new URL('/auth/login?error=token_failed', requestUrl.origin))
     }
+  }
+
+  // 로그인 성공 시, 같은 이메일로 남아있던 비회원 예약을 이 계정에 연결
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user?.email) {
+    await linkGuestBookingsToUser(user.id, user.email).catch(console.error)
   }
 
   return NextResponse.redirect(new URL(next, requestUrl.origin))

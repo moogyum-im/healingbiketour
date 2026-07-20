@@ -116,7 +116,14 @@ export default async function AdminRentalBookingsPage({ searchParams }: PageProp
                       <p className="text-xs text-zinc-400">{booking.duration_days}일 · {FMT.format(booking.daily_rate_krw)}원/일</p>
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="font-medium text-zinc-900">{booking.contact_name}</p>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="font-medium text-zinc-900">{booking.contact_name}</p>
+                        {booking.user_id ? (
+                          <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">회원</span>
+                        ) : (
+                          <span className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-500">비회원</span>
+                        )}
+                      </div>
                       <p className="text-xs text-zinc-400">{booking.contact_phone}</p>
                       <p className="text-xs text-zinc-400">{booking.contact_email}</p>
                     </td>

@@ -2,15 +2,30 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { RENTAL_PRICES, getRentalPriceByBikeId } from '@/lib/rental-prices'
-import { CheckCircle, Tag, Bike } from 'lucide-react'
+import { CheckCircle, Tag, Bike, BatteryCharging } from 'lucide-react'
 import RentalWidget from './RentalWidget'
+import { getLocale } from 'next-intl/server'
+import { formatPrice, type Currency } from '@/utils/format'
 
 export const metadata: Metadata = {
   title: '자전거 렌탈 | 힐링바이크투어',
   description: '로드·MTB·미니로드 고급 자전거를 합리적인 가격에 렌탈하세요. 헬멧·자물쇠·펌프 무상 제공.',
 }
 
-const FMT = new Intl.NumberFormat('ko-KR')
+const LOCALE_CURRENCY: Record<string, Currency> = {
+  ko: 'KRW', en: 'USD', ja: 'JPY', 'zh-CN': 'CNY', 'zh-TW': 'TWD',
+}
+const FX: Record<Currency, number> = {
+  KRW: 1, USD: 1 / 1350, JPY: 150 / 1350, CNY: 7.2 / 1350, TWD: 32 / 1350,
+}
+
+function fmtKrw(krw: number, currency: Currency): string {
+  const rate = FX[currency]
+  const amount = currency === 'KRW' || currency === 'JPY'
+    ? Math.round(krw * rate)
+    : Math.floor(krw * rate * 100) / 100
+  return formatPrice(amount, currency)
+}
 
 // ── 렌탈 가능 자전거 상세 데이터 ─────────────────────────────
 const RENTAL_BIKE_DETAILS = [
@@ -329,6 +344,8 @@ export default async function RentalPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { bike: initialBikeId } = await searchParams
+  const locale = await getLocale()
+  const currency = LOCALE_CURRENCY[locale] ?? 'KRW'
 
   return (
     <div className="bg-white">
@@ -417,28 +434,36 @@ export default async function RentalPage({
                       <div className="mt-5 rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3">
                         <p className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 mb-2">
                           <Tag className="h-3.5 w-3.5" />
-                          렌탈 단가 (1대 / 1일)
+                          렌탈 단가 (1대 기준)
                         </p>
                         <div className="grid grid-cols-3 gap-2 text-center">
                           <div className="rounded-lg bg-white border border-zinc-200 py-2">
-                            <p className="text-[10px] text-zinc-400 font-medium">1–2일</p>
+                            <p className="text-[10px] text-zinc-400 font-medium">24시간</p>
                             <p className="text-sm font-black text-zinc-800">
-                              {FMT.format(rental.day12)}<span className="text-[10px] text-zinc-400">원</span>
+                              {fmtKrw(rental.h24, currency)}
                             </p>
                           </div>
                           <div className="rounded-lg bg-white border border-zinc-200 py-2">
-                            <p className="text-[10px] text-zinc-400 font-medium">3–4일</p>
+                            <p className="text-[10px] text-zinc-400 font-medium">48시간</p>
                             <p className="text-sm font-black text-zinc-800">
-                              {FMT.format(rental.day34)}<span className="text-[10px] text-zinc-400">원</span>
+                              {fmtKrw(rental.h48, currency)}
                             </p>
                           </div>
                           <div className="rounded-lg bg-emerald-50 border border-emerald-200 py-2">
-                            <p className="text-[10px] text-emerald-600 font-medium">5일 이상</p>
+                            <p className="text-[10px] text-emerald-600 font-medium">72시간</p>
                             <p className="text-sm font-black text-emerald-700">
-                              {FMT.format(rental.day5plus)}<span className="text-[10px] text-emerald-500">원</span>
+                              {fmtKrw(rental.h72, currency)}
                             </p>
                           </div>
                         </div>
+                        {rental.isEbike && rental.extraBattery > 0 && (
+                          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5">
+                            <BatteryCharging className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                            <p className="text-[11px] font-semibold text-amber-700">
+                              추가 배터리 옵션 +{fmtKrw(rental.extraBattery, currency)}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -447,9 +472,9 @@ export default async function RentalPage({
             })}
           </div>
 
-          {/* ── 우측: 예약 위젯 (스티키) ─────────────────────── */}
+          {/* ── 우측: 예약 위젯 (스티키, 독립 스크롤) ──────────── */}
           <div className="lg:w-80 xl:w-96 shrink-0">
-            <div className="sticky top-24">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 scrollbar-track-transparent pr-1">
               <RentalWidget
                 isLoggedIn={!!user}
                 initialBikeId={initialBikeId}

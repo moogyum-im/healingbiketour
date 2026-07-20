@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import {
   sendBookingPendingNotification,
@@ -32,7 +33,6 @@ export async function createBooking(input: CreateBookingInput) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
   // 투어 정보 확인
   const { data: tour } = await supabase
@@ -43,9 +43,13 @@ export async function createBooking(input: CreateBookingInput) {
 
   if (!tour) return { error: '투어 정보를 찾을 수 없습니다.' }
 
-  // 예약번호 생성
+  // 비회원 예약은 RLS 우회를 위해 admin 클라이언트 사용
+  const insertClient = user ? supabase : createAdminClient()
+
+  // 예약번호 생성 — RLS로 안 보이는 예약이 있으면 번호가 중복될 수 있으므로
+  // admin 클라이언트로 전체 예약 수를 정확히 센다
   const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
-  const { count } = await supabase
+  const { count } = await createAdminClient()
     .from('bookings')
     .select('*', { count: 'exact', head: true })
     .gte('created_at', new Date().toISOString().split('T')[0])
@@ -54,11 +58,11 @@ export async function createBooking(input: CreateBookingInput) {
   const bookingNumber = `BK-${today}-${seq}`
 
   // 예약 생성
-  const { data: booking, error } = await supabase
+  const { data: booking, error } = await insertClient
     .from('bookings')
     .insert({
       booking_number: bookingNumber,
-      user_id: user.id,
+      user_id: user?.id ?? null,
       tour_id: input.tourId,
       tour_date_id: input.tourDateId ?? null,
       participants: input.participants,
@@ -141,15 +145,17 @@ export async function confirmBooking(bookingId: string, paymentData: {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
-  const { data: booking } = await supabase
+  // 비회원은 admin client로 RLS 우회
+  const dbClient = user ? supabase : createAdminClient()
+
+  let bookingQuery = dbClient
     .from('bookings')
     .select('*, tours(title), tour_dates(date)')
     .eq('id', bookingId)
-    .eq('user_id', user.id)
-    .single()
+  if (user) bookingQuery = bookingQuery.eq('user_id', user.id)
 
+  const { data: booking } = await bookingQuery.single()
   if (!booking) return { error: '예약을 찾을 수 없습니다.' }
 
   const creditAmount = paymentData.creditAmount ?? 0
@@ -172,13 +178,13 @@ export async function confirmBooking(bookingId: string, paymentData: {
     ? new Date(tourDate.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
     : '날짜 미정'
 
-  // 크레딧 차감 (사용한 경우)
-  if (creditAmount > 0) {
+  // 크레딧 차감 (사용한 경우, 회원만)
+  if (creditAmount > 0 && user) {
     const result = await deductCredit(supabase, user.id, creditAmount, bookingId)
     if (result.error) return { error: result.error }
   }
 
-  await supabase.from('payments').insert({
+  await dbClient.from('payments').insert({
     booking_id: bookingId,
     payment_method: paymentData.method,
     portone_payment_id: paymentData.paymentId,
@@ -189,7 +195,7 @@ export async function confirmBooking(bookingId: string, paymentData: {
     receipt_url: paymentData.receiptUrl ?? null,
   })
 
-  await supabase
+  await dbClient
     .from('bookings')
     .update({ status: 'confirmed', updated_at: new Date().toISOString() })
     .eq('id', bookingId)

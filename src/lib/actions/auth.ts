@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { linkGuestBookingsToUser } from '@/lib/actions/guest'
 
 // ── 이메일 회원가입 ────────────────────────────────────────
 export async function signUp(prevState: unknown, formData: FormData) {
@@ -38,9 +39,13 @@ export async function signIn(prevState: unknown, formData: FormData) {
   const password = formData.get('password') as string
   const redirectTo = (formData.get('redirectTo') as string) || '/'
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
     return { error: '이메일 또는 비밀번호가 올바르지 않습니다.' }
+  }
+
+  if (data.user?.email) {
+    await linkGuestBookingsToUser(data.user.id, data.user.email).catch(console.error)
   }
 
   revalidatePath('/', 'layout')

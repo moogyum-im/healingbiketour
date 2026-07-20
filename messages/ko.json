@@ -1,6 +1,6 @@
 {
   "nav": {
-    "tours": "예약하기",
+    "tours": "패키지 예약하기",
     "rental": "자전거 렌탈",
     "rental_desc": "24 · 48 · 72시간 단위로 대여",
     "contact": "문의하기",
@@ -45,7 +45,7 @@
     "admin": "관리자",
     "logout": "로그아웃",
     "logged_in_as": "로그인됨",
-    "bikes": "자전거 소개",
+    "bikes": "자전거렌탈예약하기",
     "my_page": "마이페이지",
     "tour_booking": "투어 예약",
     "active_tours": "진행 중인 투어",
@@ -141,9 +141,6 @@
     "rental_subtitle": "다양한 자전거를 골라 자유롭게 즐겨보세요",
     "rental_view_all": "전체 보기",
     "rental_cta": "렌탈 예약하기",
-    "rental_day_1_2": "1–2일",
-    "rental_day_3_4": "3–4일",
-    "rental_day_5plus": "5일+",
     "section_rental_title": "자전거 렌탈하기",
     "section_rental_view": "전체 보기",
     "section_rental_book": "렌탈 예약하기",
@@ -163,7 +160,10 @@
     "tour4_label": "올림픽공원 바이크투어",
     "tour4_desc": "당산역 출발 · 여의도·반포대교·잠실·올림픽공원",
     "tour5_label": "호반 춘천코스 바이크투어",
-    "tour5_desc": "당산역 출발 · 두물머리·자라섬·남이섬·춘천 · 편도 129km"
+    "tour5_desc": "당산역 출발 · 두물머리·자라섬·남이섬·춘천 · 편도 129km",
+    "rental_h24": "24시간",
+    "rental_h48": "48시간",
+    "rental_h72": "72시간"
   },
   "tourDetail": {
     "back_to_list": "목록으로",
@@ -488,7 +488,7 @@
     "error_generic": "전송에 실패했습니다. 다시 시도해주세요."
   },
   "bikes": {
-    "hero_title": "자전거 소개",
+    "hero_title": "자전거 렌탈 예약하기",
     "hero_subtitle": "로드·MTB·미니로드·전기 자전거 중 원하시는 스타일을 선택하세요.\n어떤 바이크를 선택하셔도 블랙박스 장착 + 투어 영상은 기본 제공됩니다.",
     "road_label": "로드 자전거",
     "road_desc": "700c 휠의 경쾌한 주행감, 포장도로 특화",
@@ -589,6 +589,8 @@
     "spec_val_dual_suspension": "앞바퀴 + 안장 이중 서스펜션",
     "spec_val_color_lcd": "컬러 LCD",
     "spec_val_led_headlight": "LED 전조등 (방향지시 기능)",
-    "spec_val_consult": "문의 시 안내"
+    "spec_val_consult": "문의 시 안내",
+    "extra_battery_option": "추가 배터리 옵션 +{price}",
+    "rental_cta_btn": "이 자전거 예약하기"
   }
 }

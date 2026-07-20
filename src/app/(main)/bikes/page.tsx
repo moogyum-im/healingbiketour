@@ -1,20 +1,34 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronDown, Zap, Mountain, Bike, Wind, Tag } from 'lucide-react'
+import { ChevronDown, Zap, Mountain, Bike, Wind, Tag, BatteryCharging, ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { RENTAL_PRICES, type BikeRentalPrice } from '@/lib/rental-prices'
+import { formatPrice, type Currency } from '@/utils/format'
 
 export const metadata: Metadata = {
-  title: '자전거 소개',
+  title: '자전거렌탈예약하기',
   description: '힐링바이크투어의 프리미엄 자전거 라인업을 소개합니다.',
 }
 
-const FMT = new Intl.NumberFormat('ko-KR')
+const LOCALE_CURRENCY: Record<string, Currency> = {
+  ko: 'KRW', en: 'USD', ja: 'JPY', 'zh-CN': 'CNY', 'zh-TW': 'TWD',
+}
+const FX: Record<Currency, number> = {
+  KRW: 1, USD: 1 / 1350, JPY: 150 / 1350, CNY: 7.2 / 1350, TWD: 32 / 1350,
+}
+
+function fmtKrw(krw: number, currency: Currency): string {
+  const rate = FX[currency]
+  const amount = currency === 'KRW' || currency === 'JPY'
+    ? Math.round(krw * rate)
+    : Math.floor(krw * rate * 100) / 100
+  return formatPrice(amount, currency)
+}
 
 type TFunc = Awaited<ReturnType<typeof getTranslations<'bikes'>>>
 
-function RentalPriceBadge({ rental, t }: { rental: BikeRentalPrice; t: TFunc }) {
+function RentalPriceBadge({ rental, t, currency }: { rental: BikeRentalPrice; t: TFunc; currency: Currency }) {
   return (
     <div className="mt-5 rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3">
       <p className="flex items-center gap-1.5 text-xs font-bold text-zinc-500 mb-2">
@@ -24,23 +38,33 @@ function RentalPriceBadge({ rental, t }: { rental: BikeRentalPrice; t: TFunc }) 
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg bg-white border border-zinc-200 py-1.5">
           <p className="text-[10px] text-zinc-400 font-medium">{t('day_1')}</p>
-          <p className="text-sm font-black text-zinc-800">{FMT.format(rental.day12)}<span className="text-[10px] font-semibold text-zinc-400">원</span></p>
+          <p className="text-sm font-black text-zinc-800">{fmtKrw(rental.h24, currency)}</p>
         </div>
         <div className="rounded-lg bg-white border border-zinc-200 py-1.5">
           <p className="text-[10px] text-zinc-400 font-medium">{t('day_2')}</p>
-          <p className="text-sm font-black text-zinc-800">{FMT.format(rental.day12)}<span className="text-[10px] font-semibold text-zinc-400">원</span></p>
+          <p className="text-sm font-black text-zinc-800">{fmtKrw(rental.h48, currency)}</p>
         </div>
         <div className="rounded-lg bg-emerald-50 border border-emerald-200 py-1.5">
           <p className="text-[10px] text-emerald-600 font-medium">{t('day_3')}</p>
-          <p className="text-sm font-black text-emerald-700">{FMT.format(rental.day34)}<span className="text-[10px] font-semibold text-emerald-500">원</span></p>
+          <p className="text-sm font-black text-emerald-700">{fmtKrw(rental.h72, currency)}</p>
         </div>
       </div>
+      {rental.isEbike && rental.extraBattery > 0 && (
+        <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5">
+          <BatteryCharging className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+          <p className="text-[11px] font-semibold text-amber-700">
+            {t('extra_battery_option', { price: fmtKrw(rental.extraBattery, currency) })}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
 
 export default async function BikesPage() {
   const t = await getTranslations('bikes')
+  const locale = await getLocale()
+  const currency = LOCALE_CURRENCY[locale] ?? 'KRW'
 
   type BikeData = {
     id: string
@@ -384,10 +408,18 @@ export default async function BikesPage() {
                                   <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
                                 </summary>
                                 <div className="mt-2">
-                                  <RentalPriceBadge rental={rentalPrice} t={t} />
+                                  <RentalPriceBadge rental={rentalPrice} t={t} currency={currency} />
                                 </div>
                               </details>
                             )}
+
+                            <Link
+                              href={`/rental?bike=${bike.id}`}
+                              className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 hover:scale-[1.01] active:scale-[0.99]"
+                            >
+                              {t('rental_cta_btn')}
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
                           </div>
                         </div>
                       </div>

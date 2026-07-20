@@ -27,7 +27,7 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
       id, booking_number, status, participants, total_amount_krw,
       contact_name, contact_email, contact_phone, created_at,
       cancellation_reason, cancellation_requested_at,
-      nationality, passport_number,
+      nationality, passport_number, user_id,
       tours ( title ),
       tour_dates ( date, start_time ),
       payments ( status, payment_method )
@@ -137,7 +137,14 @@ export default async function AdminBookingsPage({ searchParams }: PageProps) {
                       <p className="font-medium text-zinc-900 max-w-[160px] truncate">{tour?.title ?? '-'}</p>
                     </td>
                     <td className="px-4 py-3.5">
-                      <p className="font-medium text-zinc-900">{booking.contact_name}</p>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="font-medium text-zinc-900">{booking.contact_name}</p>
+                        {booking.user_id ? (
+                          <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">회원</span>
+                        ) : (
+                          <span className="rounded-md bg-zinc-100 px-1.5 py-0.5 text-[10px] font-bold text-zinc-500">비회원</span>
+                        )}
+                      </div>
                       <p className="text-xs text-zinc-400">{booking.contact_email}</p>
                     </td>
                     <td className="px-4 py-3.5">

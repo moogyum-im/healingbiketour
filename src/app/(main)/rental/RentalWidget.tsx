@@ -20,18 +20,33 @@ const DURATION_OPTIONS = [
 ]
 
 function getBikeRate(bike: BikeRentalPrice, days: number): number {
-  return days >= 3 ? bike.day34 : bike.day12
+  if (days >= 3) return bike.h72
+  if (days >= 2) return bike.h48
+  return bike.h24
 }
 
 // ── 결제수단 정의 ──────────────────────────────────────────
-const ONLINE_PAYMENT_METHODS = [
-  { ...PAYMENT_LABEL_CARD,   channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD,   currency: 'KRW' as const },
-  { ...PAYMENT_LABEL_PAYPAL, channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_PAYPAL, currency: 'USD' as const },
-].filter((m) => m.channelKey && !m.channelKey.startsWith('your_'))
+const CARD_METHOD = {
+  ...PAYMENT_LABEL_CARD,
+  channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_CARD,
+  currency: 'KRW' as const,
+}
 
+const PAYPAL_METHOD = {
+  ...PAYMENT_LABEL_PAYPAL,
+  channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_PAYPAL,
+  currency: 'USD' as const,
+}
+
+// 결제 처리용 — channelKey 유효한 것만
+const ONLINE_PAYMENT_METHODS = [CARD_METHOD, PAYPAL_METHOD]
+  .filter((m) => m.channelKey && !m.channelKey.startsWith('your_'))
+
+// 표시용 — 계좌이체 상단, 이니시스·페이팔은 테스트 섹션(하단)으로 별도 처리
 const ALL_PAYMENT_OPTIONS = [
-  ...ONLINE_PAYMENT_METHODS,
   { ...PAYMENT_LABEL_BANK },
+  CARD_METHOD,
+  PAYPAL_METHOD,
 ]
 
 export default function RentalWidget({
@@ -48,6 +63,7 @@ export default function RentalWidget({
   const [selectedBikeId, setSelectedBikeId]   = useState(initialBikeId ?? '')
   const [startDate, setStartDate]             = useState('')
   const [durationId, setDurationId]           = useState<string>('24h')
+  const [wantExtraBattery, setWantExtraBattery] = useState(false)
   const [showForm, setShowForm]               = useState(false)
   const [name, setName]                       = useState(userInfo?.name ?? '')
   const [phone, setPhone]                     = useState(userInfo?.phone ?? '')
@@ -57,11 +73,13 @@ export default function RentalWidget({
   const [loading, setLoading]                 = useState(false)
   const [bookingNumber, setBookingNumber]     = useState('')
 
-  const selectedBike = RENTAL_PRICES.find((b) => b.bikeId === selectedBikeId)
-  const duration     = DURATION_OPTIONS.find((d) => d.id === durationId)!
-  const isInquiry    = durationId === 'inquiry'
-  const dailyRate    = (!isInquiry && selectedBike) ? getBikeRate(selectedBike, duration.days) : 0
-  const total        = dailyRate * duration.days
+  const selectedBike  = RENTAL_PRICES.find((b) => b.bikeId === selectedBikeId)
+  const duration      = DURATION_OPTIONS.find((d) => d.id === durationId)!
+  const isInquiry     = durationId === 'inquiry'
+  const dailyRate     = (!isInquiry && selectedBike) ? getBikeRate(selectedBike, duration.days) : 0
+  const batteryFee    = (selectedBike?.isEbike && wantExtraBattery && selectedBike.extraBattery > 0)
+    ? selectedBike.extraBattery : 0
+  const total         = dailyRate * duration.days + batteryFee
 
   const isPayPal      = paymentMethod === 'paypal'
   const isBankTransfer = paymentMethod === 'bank'
@@ -70,7 +88,6 @@ export default function RentalWidget({
   const needsPhone = isLoggedIn && !userInfo?.phone
 
   function handleBookClick() {
-    if (!isLoggedIn) { router.push('/auth/login?redirectTo=/rental'); return }
     if (!selectedBikeId) { toast.error('자전거를 선택해 주세요.'); return }
     if (!startDate)      { toast.error('시작일을 선택해 주세요.'); return }
     setShowForm(true)
@@ -167,7 +184,8 @@ export default function RentalWidget({
   if (bookingNumber) {
     const resetForm = () => {
       setBookingNumber(''); setShowForm(false); setSelectedBikeId(''); setStartDate('')
-      setDurationId('24h'); setName(userInfo?.name ?? ''); setPhone(userInfo?.phone ?? '')
+      setDurationId('24h'); setWantExtraBattery(false)
+      setName(userInfo?.name ?? ''); setPhone(userInfo?.phone ?? '')
       setEmail(userInfo?.email ?? ''); setRequests('')
       setPaymentMethod(ALL_PAYMENT_OPTIONS[0]?.id ?? 'card')
     }
@@ -192,6 +210,20 @@ export default function RentalWidget({
         ) : (
           <p className="mt-3 text-xs text-zinc-400">예약이 확정되었습니다. 카카오톡 알림을 확인해 주세요.</p>
         )}
+
+        {!isLoggedIn && (
+          <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-left text-xs text-blue-700">
+            <p className="font-semibold mb-1">예약번호를 꼭 기억해 두세요!</p>
+            <p>
+              나중에{' '}
+              <Link href="/booking-lookup" className="font-semibold underline">예약조회</Link>
+              에서 예약번호 + 연락처로 확인할 수 있고,{' '}
+              <Link href={`/auth/signup?email=${encodeURIComponent(email)}`} className="font-semibold underline">회원가입</Link>
+              하면 마이페이지에서 계속 관리할 수 있어요.
+            </p>
+          </div>
+        )}
+
         <button onClick={resetForm} className="mt-5 w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
           새 예약하기
         </button>
@@ -293,6 +325,24 @@ export default function RentalWidget({
             </div>
           </div>
 
+          {/* 추가 배터리 옵션 (전기자전거만) */}
+          {selectedBike?.isEbike && selectedBike.extraBattery > 0 && !isInquiry && (
+            <div>
+              <label className="flex items-center gap-3 cursor-pointer rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-3 transition-all hover:border-amber-300">
+                <input
+                  type="checkbox"
+                  checked={wantExtraBattery}
+                  onChange={(e) => setWantExtraBattery(e.target.checked)}
+                  className="h-4 w-4 accent-amber-500 shrink-0"
+                />
+                <div>
+                  <p className="text-sm font-bold text-amber-800">추가 배터리 (+{FMT.format(selectedBike.extraBattery)}원)</p>
+                  <p className="text-xs text-amber-600 mt-0.5">여분 배터리 1개 추가 제공</p>
+                </div>
+              </label>
+            </div>
+          )}
+
           {/* 금액 요약 (24/48/72h) */}
           {selectedBike && !isInquiry && (
             <div className="rounded-xl bg-zinc-50 p-3 space-y-1.5">
@@ -300,6 +350,12 @@ export default function RentalWidget({
                 <span>{selectedBike.model} · {duration.label}({duration.sublabel})</span>
                 <span>{FMT.format(dailyRate)}원 × {duration.days}일</span>
               </div>
+              {batteryFee > 0 && (
+                <div className="flex items-center justify-between text-sm text-amber-600">
+                  <span>추가 배터리</span>
+                  <span>+{FMT.format(batteryFee)}원</span>
+                </div>
+              )}
               <div className="border-t border-zinc-200 pt-1.5 flex items-center justify-between font-black text-zinc-900">
                 <span>합계</span>
                 <span className="text-lg text-emerald-700">{FMT.format(total)}원</span>
@@ -409,46 +465,53 @@ export default function RentalWidget({
           </div>
 
           {/* 결제 수단 */}
-          <div>
-            <p className="mb-2 text-xs font-semibold text-zinc-600">결제 수단</p>
-            <div className="flex flex-col gap-2">
-              {ALL_PAYMENT_OPTIONS.map((method) => (
-                <label
-                  key={method.id}
-                  className={`flex items-start gap-3 cursor-pointer rounded-xl border-2 px-4 py-3 transition-all ${
-                    paymentMethod === method.id
-                      ? method.id === 'bank'
-                        ? 'border-blue-400 bg-blue-50'
-                        : 'border-emerald-500 bg-emerald-50'
-                      : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="rentalPayment"
-                    value={method.id}
-                    checked={paymentMethod === method.id}
-                    onChange={() => setPaymentMethod(method.id)}
-                    className="mt-0.5 accent-emerald-600"
-                  />
-                  <div>
-                    <p className={`text-sm font-bold ${
-                      paymentMethod === method.id
-                        ? method.id === 'bank' ? 'text-blue-800' : 'text-emerald-800'
-                        : 'text-zinc-800'
-                    }`}>
-                      {method.label}
-                    </p>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">{method.sublabel}</p>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-zinc-600">결제 수단</p>
+
+            {/* 계좌 입금 — 상단 */}
+            <label className={`flex items-start gap-3 cursor-pointer rounded-xl border-2 px-4 py-3 transition-all ${paymentMethod === 'bank' ? 'border-blue-400 bg-blue-50' : 'border-zinc-200 hover:border-zinc-300 bg-white'}`}>
+              <input type="radio" name="rentalPayment" value="bank" checked={paymentMethod === 'bank'} onChange={() => setPaymentMethod('bank')} className="mt-0.5 accent-blue-600" />
+              <div>
+                <p className={`text-sm font-bold ${paymentMethod === 'bank' ? 'text-blue-800' : 'text-zinc-800'}`}>{PAYMENT_LABEL_BANK.label}</p>
+                <p className="text-[11px] text-zinc-400 mt-0.5">{PAYMENT_LABEL_BANK.sublabel}</p>
+              </div>
+            </label>
+
+            {/* 테스트 결제 섹션 — 하단 */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2">
+              <p className="text-[11px] font-bold text-amber-700 uppercase tracking-wide">🧪 테스트 결제 운영 중</p>
+              <p className="text-[11px] text-amber-600">아래 결제 수단은 현재 테스트 중입니다. 결제를 완료하더라도 실결제 없이 즉시 취소 처리됩니다.</p>
+
+              {/* 이니시스 (카드) */}
+              <label className={`flex items-start gap-3 cursor-pointer rounded-lg border-2 px-3 py-2.5 transition-all ${paymentMethod === 'card' ? 'border-emerald-500 bg-white' : 'border-amber-200 bg-white hover:border-amber-300'}`}>
+                <input type="radio" name="rentalPayment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="mt-0.5 accent-emerald-600" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black" style={{background:'#FEE500',color:'#3A1D1D'}}>K pay</span>
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black bg-[#03C75A] text-white">N pay</span>
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black bg-[#0064FF] text-white">toss</span>
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-zinc-200 text-zinc-700">카드</span>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">테스트</span>
                   </div>
-                </label>
-              ))}
+                  <p className="text-[10px] text-zinc-400 mt-1">카카오페이 · 네이버페이 · 토스 · 신용카드</p>
+                </div>
+              </label>
+
+              {/* PayPal */}
+              <label className={`flex items-start gap-3 cursor-pointer rounded-lg border-2 px-3 py-2.5 transition-all ${paymentMethod === 'paypal' ? 'border-emerald-500 bg-white' : 'border-amber-200 bg-white hover:border-amber-300'}`}>
+                <input type="radio" name="rentalPayment" value="paypal" checked={paymentMethod === 'paypal'} onChange={() => setPaymentMethod('paypal')} className="mt-0.5 accent-emerald-600" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black bg-[#003087] text-white">PayPal</span>
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">테스트</span>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 mt-1">
+                    PayPal · USD 환산 결제 (해외 카드)
+                    {paymentMethod === 'paypal' && ` · 약 $${(totalUsdCents / 100).toFixed(2)}`}
+                  </p>
+                </div>
+              </label>
             </div>
-            {isPayPal && (
-              <p className="mt-1.5 text-[11px] text-zinc-400">
-                USD 환산 결제 · 약 ${(totalUsdCents / 100).toFixed(2)}
-              </p>
-            )}
             {isBankTransfer && (
               <div className="mt-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 space-y-0.5">
                 <p className="text-[11px] font-bold text-blue-500 uppercase tracking-wide mb-1">입금 계좌</p>

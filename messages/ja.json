@@ -1,6 +1,6 @@
 {
   "nav": {
-    "tours": "ツアー予約",
+    "tours": "パッケージ予約",
     "contact": "お問い合わせ",
     "faq": "よくある質問",
     "faq_desc": "疑問を事前にご確認ください",
@@ -43,7 +43,7 @@
     "admin": "管理者",
     "logout": "ログアウト",
     "logged_in_as": "ログイン中",
-    "bikes": "バイク紹介",
+    "bikes": "自転車レンタル予約",
     "my_page": "マイページ",
     "tour_booking": "ツアー予約",
     "active_tours": "ツアー一覧",
@@ -139,9 +139,6 @@
     "rental_subtitle": "お好みのバイクを選んで自由に走ろう",
     "rental_view_all": "全て見る",
     "rental_cta": "レンタル予約",
-    "rental_day_1_2": "1〜2日",
-    "rental_day_3_4": "3〜4日",
-    "rental_day_5plus": "5日以上",
     "section_rental_title": "自転車をレンタルする",
     "section_rental_view": "全て見る",
     "section_rental_book": "レンタル予約",
@@ -161,7 +158,10 @@
     "tour4_label": "オリンピック公園バイクツアー",
     "tour4_desc": "堂山駅発 · 汝矣島・盤浦大橋・蚕室・オリンピック公園",
     "tour5_label": "春川レイクサイドバイクツアー",
-    "tour5_desc": "堂山駅発 · 두물머리・ジャラソム・南怡島・春川 · 片道129km"
+    "tour5_desc": "堂山駅発 · 두물머리・ジャラソム・南怡島・春川 · 片道129km",
+    "rental_h24": "24時間",
+    "rental_h48": "48時間",
+    "rental_h72": "72時間"
   },
   "tourDetail": {
     "back_to_list": "一覧に戻る",
@@ -486,7 +486,7 @@
     "error_generic": "送信に失敗しました。もう一度お試しください。"
   },
   "bikes": {
-    "hero_title": "バイクラインナップ",
+    "hero_title": "自転車レンタル予約",
     "hero_subtitle": "ロード・MTB・ミニロード・電動自転車からお選びください。\nどのバイクにもドラレコ装備＋ツアー映像提供は標準装備です。",
     "road_label": "ロードバイク",
     "road_desc": "700cホイール、舗装路に特化した軽快な走り",
@@ -587,6 +587,8 @@
     "spec_val_dual_suspension": "フロント＋シート ダブルサスペンション",
     "spec_val_color_lcd": "カラーLCD",
     "spec_val_led_headlight": "LEDヘッドライト（方向指示機能）",
-    "spec_val_consult": "お問い合わせください"
+    "spec_val_consult": "お問い合わせください",
+    "extra_battery_option": "追加バッテリーオプション +{price}",
+    "rental_cta_btn": "このバイクを予約"
   }
 }
