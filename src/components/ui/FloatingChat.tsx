@@ -1,27 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { MessageCircle, X, ChevronRight, Send, Phone, User, ArrowLeft, Loader2 } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-
-const FAQS = [
-  { q: '투어 예약은 어떻게 하나요?', a: '원하는 투어를 선택하신 후 날짜와 인원을 고르고 결제하시면 됩니다. 카카오페이·네이버페이·카드 결제 모두 가능합니다.' },
-  { q: '자전거는 직접 가져가야 하나요?', a: '아닙니다! 일반 자전거, MTB/로드, 전기자전거 중 원하시는 종류를 예약 시 선택하시면 당산역 출발지에서 제공해 드립니다.' },
-  { q: '음주 후 참가할 수 있나요?', a: '음주 상태로는 절대 참가 불가합니다. 자전거는 도로교통법상 차에 해당하며 음주 운전 시 형사처벌 대상입니다. 적발 시 즉시 참가 거부 및 환불 불가합니다.' },
-  { q: '환불 정책이 어떻게 되나요?', a: '7일 전 이상: 100% 환불 / 3~6일 전: 50% 환불 / 2일 이내: 환불 불가. 우천·천재지변 취소 시 전액 환불됩니다.' },
-  { q: '집결지가 어디인가요?', a: '모든 투어는 당산역 4번 출구 앞에서 출발합니다. 예약 확정 후 카카오톡으로 상세 안내가 발송됩니다.' },
-  { q: '어린이도 참가할 수 있나요?', a: '만 12세 이상 참가 가능합니다. 미성년자는 반드시 보호자와 함께 참가하셔야 합니다.' },
-  { q: '단체 할인이 있나요?', a: '10인 이상 단체 예약 시 별도 할인 및 가이드 서비스를 제공해 드립니다. 상담사 연결로 문의해 주세요.' },
-]
 
 type Message = { id?: string; from: 'bot' | 'user' | 'admin'; text: string }
 type Mode = 'faq' | 'connect_form' | 'live'
-
-const GREETING: Message = {
-  from: 'bot',
-  text: '안녕하세요! 힐링바이크투어입니다 🚴\n자주 묻는 질문을 선택하시거나 상담사에게 연결하세요.',
-}
 
 const SESSION_KEY = 'hbt_chat_session'
 
@@ -37,11 +23,22 @@ function closeSession(sessionId: string) {
 }
 
 export default function FloatingChat() {
+  const t = useTranslations('chat')
   const pathname = usePathname()
+
+  const greeting = useMemo<Message>(() => ({ from: 'bot', text: t('greeting') }), [t])
+  const faqs = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => ({
+      q: t(`faq${i + 1}_q`),
+      a: t(`faq${i + 1}_a`),
+    })),
+    [t]
+  )
+
   const [restoring, setRestoring] = useState(true)   // 복원 완료 전까지 아무것도 렌더 안 함
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<Mode>('faq')
-  const [messages, setMessages] = useState<Message[]>([GREETING])
+  const [messages, setMessages] = useState<Message[]>([greeting])
   const [showFaqs, setShowFaqs] = useState(true)
   const [input, setInput] = useState('')
   const [form, setForm] = useState({ name: '', phone: '' })
@@ -84,7 +81,7 @@ export default function FloatingChat() {
               lastActivityRef.current = lastTime
             }
             const restored: Message[] = [
-              { from: 'bot', text: '이전 상담이 복원되었습니다.' },
+              { from: 'bot', text: t('restored_notice') },
               ...list.map((m) => ({
                 id: m.id,
                 from: m.sender === 'admin' ? ('admin' as const) : ('user' as const),
@@ -97,6 +94,7 @@ export default function FloatingChat() {
             setRestoring(false)
           })
       })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // 20분 비응답 자동 종료 타이머
@@ -107,14 +105,12 @@ export default function FloatingChat() {
         closeSession(sessionId)
         setSessionId(null)
         setMode('faq')
-        setMessages([
-          GREETING,
-          { from: 'bot', text: '20분간 응답이 없어 상담이 자동 종료되었습니다. 다시 연결하시려면 상담사 연결 요청을 눌러주세요.' },
-        ])
+        setMessages([greeting, { from: 'bot', text: t('auto_close_notice') }])
         setShowFaqs(false)
       }
     }, 60_000)
     return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId])
 
   useEffect(() => {
@@ -146,7 +142,7 @@ export default function FloatingChat() {
     return () => { supabase.removeChannel(channel) }
   }, [sessionId])
 
-  const sendFaq = (faq: typeof FAQS[0]) => {
+  const sendFaq = (faq: { q: string; a: string }) => {
     setMessages((prev) => [
       ...prev,
       { from: 'user', text: faq.q },
@@ -173,10 +169,7 @@ export default function FloatingChat() {
       setSessionId(data.sessionId)
       localStorage.setItem(SESSION_KEY, data.sessionId)
       setMode('live')
-      setMessages([{
-        from: 'bot',
-        text: '상담사에게 연결되었습니다 ✅\n메시지를 입력해주세요. 담당자가 확인 후 답변 드리겠습니다.',
-      }])
+      setMessages([{ from: 'bot', text: t('connected_notice') }])
     }
   }
 
@@ -212,11 +205,11 @@ export default function FloatingChat() {
                 <MessageCircle className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white">힐링바이크투어 상담</p>
+                <p className="text-sm font-bold text-white">{t('header_title')}</p>
                 <div className="flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
                   <p className="text-[10px] text-emerald-100">
-                    {mode === 'live' ? '상담사 연결됨' : '온라인'}
+                    {mode === 'live' ? t('status_live') : t('status_online')}
                   </p>
                 </div>
               </div>
@@ -233,7 +226,7 @@ export default function FloatingChat() {
                 {messages.map((msg, i) => (
                   <div key={msg.id ?? i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {msg.from === 'admin' && (
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black mr-1.5 mt-1">상</div>
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black mr-1.5 mt-1">{t('admin_badge')}</div>
                     )}
                     <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line ${
                       msg.from === 'user'
@@ -242,7 +235,7 @@ export default function FloatingChat() {
                           ? 'bg-white text-zinc-800 border-2 border-emerald-200 rounded-bl-sm shadow-sm'
                           : 'bg-white text-zinc-800 border border-zinc-200 rounded-bl-sm shadow-sm'
                     }`}>
-                      {msg.from === 'admin' && <p className="text-[10px] font-bold text-emerald-600 mb-0.5">힐링바이크투어 상담사</p>}
+                      {msg.from === 'admin' && <p className="text-[10px] font-bold text-emerald-600 mb-0.5">{t('admin_name')}</p>}
                       {msg.text}
                     </div>
                   </div>
@@ -250,7 +243,7 @@ export default function FloatingChat() {
                 {/* 활성 세션이 없을 때만 FAQ 버튼 표시 */}
                 {!sessionId && showFaqs && (
                   <div className="space-y-1.5 mt-2">
-                    {FAQS.map((faq) => (
+                    {faqs.map((faq) => (
                       <button key={faq.q} onClick={() => sendFaq(faq)}
                         className="w-full flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-3 py-2 text-left text-xs font-medium text-zinc-700 hover:border-emerald-400 hover:text-emerald-700 transition-colors shadow-sm"
                       >
@@ -262,7 +255,7 @@ export default function FloatingChat() {
                 )}
                 {!sessionId && !showFaqs && (
                   <button onClick={() => setShowFaqs(true)} className="text-[11px] text-emerald-600 hover:underline">
-                    자주 묻는 질문 다시 보기
+                    {t('show_faqs_again')}
                   </button>
                 )}
                 <div ref={bottomRef} />
@@ -273,7 +266,7 @@ export default function FloatingChat() {
                   <input type="text" value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && sendMessage()}
-                    placeholder="메시지를 입력하세요"
+                    placeholder={t('input_placeholder')}
                     className="flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     autoFocus
                   />
@@ -288,7 +281,7 @@ export default function FloatingChat() {
                   <button onClick={() => setMode('connect_form')}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-3 py-2.5 text-sm font-bold text-white hover:bg-zinc-800 transition-colors"
                   >
-                    <Phone className="h-4 w-4" /> 상담사 연결 요청
+                    <Phone className="h-4 w-4" /> {t('connect_request_button')}
                   </button>
                 </div>
               )}
@@ -298,21 +291,21 @@ export default function FloatingChat() {
           {/* 상담사 연결 폼 */}
           {mode === 'connect_form' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-50">
-              <p className="text-sm text-zinc-600">이름과 연락처를 남기시면 상담사가 바로 연결됩니다.</p>
+              <p className="text-sm text-zinc-600">{t('connect_form_intro')}</p>
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 mb-1.5">
-                  <User className="h-3.5 w-3.5" /> 이름 <span className="text-zinc-400 font-normal">(선택)</span>
+                  <User className="h-3.5 w-3.5" /> {t('name_label')} <span className="text-zinc-400 font-normal">{t('optional_label')}</span>
                 </label>
-                <input type="text" placeholder="홍길동" value={form.name}
+                <input type="text" placeholder={t('name_placeholder')} value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-600 mb-1.5">
-                  <Phone className="h-3.5 w-3.5" /> 연락처 <span className="text-zinc-400 font-normal">(선택)</span>
+                  <Phone className="h-3.5 w-3.5" /> {t('phone_label')} <span className="text-zinc-400 font-normal">{t('optional_label')}</span>
                 </label>
-                <input type="tel" placeholder="010-0000-0000" value={form.phone}
+                <input type="tel" placeholder={t('phone_placeholder')} value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
@@ -320,7 +313,7 @@ export default function FloatingChat() {
               <button onClick={startConnect} disabled={connecting}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
               >
-                {connecting ? <><Loader2 className="h-4 w-4 animate-spin" /> 연결 중...</> : '상담사 연결하기'}
+                {connecting ? <><Loader2 className="h-4 w-4 animate-spin" /> {t('connecting')}</> : t('connect_submit')}
               </button>
               <div ref={bottomRef} />
             </div>
@@ -339,26 +332,26 @@ export default function FloatingChat() {
                     localStorage.removeItem(SESSION_KEY)
                     setSessionId(null)
                     setMode('faq')
-                    setMessages([GREETING])
+                    setMessages([greeting])
                     setShowFaqs(true)
                   }}
                   className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors mb-2"
                 >
-                  <X className="h-3 w-3" /> 상담 종료
+                  <X className="h-3 w-3" /> {t('close_session')}
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-50">
                 {messages.map((msg, i) => (
                   <div key={msg.id ?? i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
                     {msg.from === 'admin' && (
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black mr-1.5 mt-1">상</div>
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black mr-1.5 mt-1">{t('admin_badge')}</div>
                     )}
                     <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line ${
                       msg.from === 'user' ? 'bg-emerald-600 text-white rounded-br-sm'
                       : msg.from === 'admin' ? 'bg-white text-zinc-800 border-2 border-emerald-200 rounded-bl-sm shadow-sm'
                       : 'bg-white text-zinc-800 border border-zinc-200 rounded-bl-sm shadow-sm'
                     }`}>
-                      {msg.from === 'admin' && <p className="text-[10px] font-bold text-emerald-600 mb-0.5">힐링바이크투어 상담사</p>}
+                      {msg.from === 'admin' && <p className="text-[10px] font-bold text-emerald-600 mb-0.5">{t('admin_name')}</p>}
                       {msg.text}
                     </div>
                   </div>
@@ -369,7 +362,7 @@ export default function FloatingChat() {
                 <input type="text" value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && sendMessage()}
-                  placeholder="메시지를 입력하세요"
+                  placeholder={t('input_placeholder')}
                   className="flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
                 <button onClick={sendMessage} disabled={!input.trim()}
@@ -385,7 +378,7 @@ export default function FloatingChat() {
 
       <button onClick={() => setOpen((v) => !v)}
         className="fixed bottom-6 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all"
-        aria-label="상담 채팅"
+        aria-label={t('aria_label')}
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
         {!open && (
