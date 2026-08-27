@@ -104,6 +104,26 @@ export async function middleware(request: NextRequest) {
       console.error('[middleware] admin check failed:', e)
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
+  } else if (!pathname.startsWith('/api')) {
+    // 방문자당 하루 1건만 기록 (관리자/API 경로 제외)
+    const today = new Date().toISOString().split('T')[0]
+    if (request.cookies.get('hbt_last_visit')?.value !== today) {
+      let visitorId = request.cookies.get('hbt_vid')?.value
+      if (!visitorId) {
+        visitorId = crypto.randomUUID()
+        response.cookies.set('hbt_vid', visitorId, { path: '/', maxAge: 60 * 60 * 24 * 400 })
+      }
+      response.cookies.set('hbt_last_visit', today, { path: '/', maxAge: 60 * 60 * 24 * 400 })
+      try {
+        await supabase.from('site_visits').insert({
+          session_id: visitorId,
+          path: pathname,
+          referrer: request.headers.get('referer'),
+        })
+      } catch (e) {
+        console.error('[middleware] visit tracking failed:', e)
+      }
+    }
   }
 
   return response
