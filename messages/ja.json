@@ -333,6 +333,7 @@
     "biz_info": "商号: ヒーリングバイクツアー株式会社 | 代表: イ・サンホ | 登録番号: 860-86-04061",
     "biz_address": "住所: ソウル特別市 永登浦区 堂山路50キル 11, 102号 | メール: healingbiketour@gmail.com",
     "biz_mail_order": "通信販売業申告番号: 第2026-ソウル永登浦-1384号",
+    "call_label": "お電話でのお問い合わせ",
     "copyright": "© 2026 ヒーリングバイクツアー株式会社. All rights reserved."
   },
   "about": {
@@ -446,7 +447,8 @@
     "no_faqs": "このカテゴリーのFAQはありません。",
     "contact_prompt": "お探しの回答が見つかりませんでしたか？",
     "contact_link": "メールでお問い合わせ",
-    "contact_phone": "お電話でのお問い合わせ: 02-6265-2600"
+    "contact_phone": "お電話でのお問い合わせ: 02-6265-2600",
+    "urgent_call_notice": "お急ぎのご相談は、お電話いただければすぐに対応いたします"
   },
   "contact": {
     "title": "1対1 相談",
@@ -602,6 +604,7 @@
     "show_faqs_again": "よくある質問を再度見る",
     "input_placeholder": "メッセージを入力してください",
     "connect_request_button": "担当者への接続リクエスト",
+    "urgent_call_notice": "お急ぎのご相談は、お電話いただければすぐに対応いたします",
     "connect_form_intro": "お名前とご連絡先を残していただくと、すぐに担当者におつなぎします。",
     "name_label": "お名前",
     "optional_label": "（任意）",

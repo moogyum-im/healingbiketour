@@ -331,6 +331,7 @@
     "biz_info": "公司名：힐링바이크투어股份有限公司 | 負責人：이상호 | 統一編號：860-86-04061",
     "biz_address": "地址：首爾特別市 永登浦區 堂山路50길 11, 102號 | 信箱: healingbiketour@gmail.com",
     "biz_mail_order": "通信銷售業申報號：第2026-首爾永登浦-1384號",
+    "call_label": "電話諮詢",
     "copyright": "© 2026 힐링바이크투어股份有限公司. All rights reserved."
   },
   "about": {
@@ -444,7 +445,8 @@
     "no_faqs": "此類別暫無常見問題。",
     "contact_prompt": "沒找到您想要的答案？",
     "contact_link": "透過信箱聯繫我們",
-    "contact_phone": "電話諮詢：02-6265-2600"
+    "contact_phone": "電話諮詢：02-6265-2600",
+    "urgent_call_notice": "如需緊急諮詢，請直接致電，我們將立即為您提供協助"
   },
   "contact": {
     "title": "線上諮詢",
@@ -600,6 +602,7 @@
     "show_faqs_again": "重新查看常見問題",
     "input_placeholder": "請輸入留言",
     "connect_request_button": "請求連接客服",
+    "urgent_call_notice": "如需緊急諮詢，請直接致電，我們將立即為您提供協助",
     "connect_form_intro": "請留下姓名和聯絡方式，我們將立即為您連接客服。",
     "name_label": "姓名",
     "optional_label": "（選填）",

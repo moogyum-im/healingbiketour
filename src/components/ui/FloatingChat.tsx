@@ -5,6 +5,7 @@ import { MessageCircle, X, ChevronRight, Send, Phone, User, ArrowLeft, Loader2 }
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
+import { CONTACT_PHONE } from '@/lib/constants'
 
 type Message = { id?: string; from: 'bot' | 'user' | 'admin'; text: string }
 type Mode = 'faq' | 'connect_form' | 'live'
@@ -277,7 +278,16 @@ export default function FloatingChat() {
                   </button>
                 </div>
               ) : (
-                <div className="px-3 py-2 bg-zinc-50 border-t border-zinc-100">
+                <div className="px-3 py-3 bg-zinc-50 border-t border-zinc-100 space-y-2">
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 text-center">
+                    <p className="text-xs font-medium text-emerald-800 leading-snug">{t('urgent_call_notice')}</p>
+                    <a
+                      href={`tel:${CONTACT_PHONE.tel}`}
+                      className="mt-1 flex items-center justify-center gap-1.5 text-xl font-black text-emerald-700 hover:text-emerald-800"
+                    >
+                      <Phone className="h-4 w-4" /> {CONTACT_PHONE.display}
+                    </a>
+                  </div>
                   <button onClick={() => setMode('connect_form')}
                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-3 py-2.5 text-sm font-bold text-white hover:bg-zinc-800 transition-colors"
                   >

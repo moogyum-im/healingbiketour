@@ -335,6 +335,7 @@
     "biz_info": "상호: 주식회사 힐링바이크투어 | 대표자: 이상호 | 사업자등록번호: 860-86-04061",
     "biz_address": "사업장 소재지: 서울특별시 영등포구 당산로50길 11, 102호(당산동6가, 당산빌) | 이메일: healingbiketour@gmail.com",
     "biz_mail_order": "통신판매업신고번호: 제2026-서울영등포-1384호 | 여행사업 등록 영등포구",
+    "call_label": "전화 문의",
     "copyright": "© 2026 주식회사 힐링바이크투어. All rights reserved."
   },
   "about": {
@@ -448,7 +449,8 @@
     "no_faqs": "해당 카테고리의 FAQ가 없습니다.",
     "contact_prompt": "원하는 답변을 못 찾으셨나요?",
     "contact_link": "이메일로 문의하기",
-    "contact_phone": "전화 문의: 02-6265-2600"
+    "contact_phone": "전화 문의: 02-6265-2600",
+    "urgent_call_notice": "급하신 경우 바로 전화 주세요"
   },
   "contact": {
     "title": "1:1 상담 신청",
@@ -604,6 +606,7 @@
     "show_faqs_again": "자주 묻는 질문 다시 보기",
     "input_placeholder": "메시지를 입력하세요",
     "connect_request_button": "상담사 연결 요청",
+    "urgent_call_notice": "급한 상담의 경우 바로 연결 주시면 상담을 도와드리겠습니다",
     "connect_form_intro": "이름과 연락처를 남기시면 상담사가 바로 연결됩니다.",
     "name_label": "이름",
     "optional_label": "(선택)",

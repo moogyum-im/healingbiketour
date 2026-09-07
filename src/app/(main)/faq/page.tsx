@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { ChevronDown, HelpCircle } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
+import { CONTACT_PHONE } from '@/lib/constants'
 
 const CATEGORY_KEYS = [
   { key: 'cat_all',          dbVal: null },
@@ -188,6 +189,16 @@ export default function FaqPage() {
               {t('contact_phone')}
             </a>
           </p>
+        </div>
+
+        <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 px-5 py-4 text-center">
+          <p className="text-sm font-medium text-emerald-800">{t('urgent_call_notice')}</p>
+          <a
+            href={`tel:${CONTACT_PHONE.tel}`}
+            className="mt-1 inline-block text-2xl font-black text-emerald-700 hover:text-emerald-800"
+          >
+            {CONTACT_PHONE.display}
+          </a>
         </div>
       </div>
     </div>

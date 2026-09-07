@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getTranslations } from 'next-intl/server'
-import { Bike, MessageCircle, Share2, Video } from 'lucide-react'
+import { Bike, MessageCircle, Phone, Share2, Video } from 'lucide-react'
+import { CONTACT_PHONE } from '@/lib/constants'
 
 const socials = [
   { label: 'Instagram', href: 'https://instagram.com', icon: Share2 },
@@ -45,6 +46,12 @@ export default async function Footer() {
             <p className="mt-3 text-sm leading-relaxed text-zinc-500">
               {t('brand_desc')}
             </p>
+            <a
+              href={`tel:${CONTACT_PHONE.tel}`}
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-400 hover:text-emerald-300"
+            >
+              <Phone className="h-4 w-4" /> {t('call_label')} {CONTACT_PHONE.display}
+            </a>
             <div className="mt-4 flex gap-3">
               {socials.map(({ label, href, icon: Icon }) => (
                 <a

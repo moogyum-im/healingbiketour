@@ -331,6 +331,7 @@
     "biz_info": "公司名：힐링바이크투어株式会社 | 负责人：이상호 | 营业执照：860-86-04061",
     "biz_address": "地址：首尔特别市 永登浦区 堂山路50길 11, 102号 | 邮箱: healingbiketour@gmail.com",
     "biz_mail_order": "通信销售业申报号：第2026-首尔永登浦-1384号",
+    "call_label": "电话咨询",
     "copyright": "© 2026 힐링바이크투어株式会社. All rights reserved."
   },
   "about": {
@@ -444,7 +445,8 @@
     "no_faqs": "该类别暂无常见问题。",
     "contact_prompt": "没找到您想要的答案？",
     "contact_link": "通过邮件联系我们",
-    "contact_phone": "电话咨询：02-6265-2600"
+    "contact_phone": "电话咨询：02-6265-2600",
+    "urgent_call_notice": "如需紧急咨询，请直接致电，我们将立即为您提供帮助"
   },
   "contact": {
     "title": "在线咨询",
@@ -600,6 +602,7 @@
     "show_faqs_again": "重新查看常见问题",
     "input_placeholder": "请输入留言",
     "connect_request_button": "请求连接客服",
+    "urgent_call_notice": "如需紧急咨询，请直接致电，我们将立即为您提供帮助",
     "connect_form_intro": "请留下姓名和联系方式，我们将立即为您连接客服。",
     "name_label": "姓名",
     "optional_label": "（选填）",

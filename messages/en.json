@@ -335,6 +335,7 @@
     "biz_info": "Company: HealingBikeTour Inc. | CEO: Sanghoo Lee | Business Reg.: 860-86-04061",
     "biz_address": "Address: 102, 11 Dangsan-ro 50-gil, Yeongdeungpo-gu, Seoul | Email: healingbiketour@gmail.com",
     "biz_mail_order": "Mail Order License: 2026-Seoul Yeongdeungpo-1384 | Travel Business Reg.: Yeongdeungpo-gu",
+    "call_label": "Call us",
     "copyright": "© 2026 HealingBikeTour Inc. All rights reserved."
   },
   "about": {
@@ -448,7 +449,8 @@
     "no_faqs": "No FAQs in this category.",
     "contact_prompt": "Didn't find your answer?",
     "contact_link": "Contact us by email",
-    "contact_phone": "Or call us: 02-6265-2600"
+    "contact_phone": "Or call us: 02-6265-2600",
+    "urgent_call_notice": "Need it fast? Call us directly"
   },
   "contact": {
     "title": "1:1 Inquiry",
@@ -604,6 +606,7 @@
     "show_faqs_again": "Show FAQs again",
     "input_placeholder": "Type your message",
     "connect_request_button": "Request a consultant",
+    "urgent_call_notice": "For urgent help, call us directly and we'll assist you right away",
     "connect_form_intro": "Leave your name and phone number to connect with a consultant right away.",
     "name_label": "Name",
     "optional_label": "(optional)",

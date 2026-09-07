@@ -1,5 +1,11 @@
 // 사이트 전역 공통 상수 — 한 곳만 수정하면 전체에 반영됩니다
 
+// 긴급 연락용 대표 전화번호 (상담 챗봇 등에서 노출)
+export const CONTACT_PHONE = {
+  display: '010-3064-7755',
+  tel: '01030647755',
+} as const
+
 export const BANK_ACCOUNT = {
   bank: '우리은행',
   account: '1005-804-894785',
