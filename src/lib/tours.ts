@@ -36,6 +36,7 @@ function dbRowToTour(t: Record<string, unknown>, fallback?: Tour): Tour {
     highlights:        (t.highlights as string[] | null) ?? fallback?.highlights ?? [],
     options:           (t.options as Tour['options']) ?? fallback?.options,
     translations:      (t.translations as Tour['translations']) ?? fallback?.translations,
+    route:             (t.route as Tour['route']) ?? fallback?.route,
     sort_order:        (t.sort_order as number | null) ?? fallback?.sort_order ?? 999,
     rating:            Number(t.rating ?? fallback?.rating ?? 0),
     review_count:      Number(t.review_count ?? fallback?.review_count ?? 0),

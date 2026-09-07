@@ -26,6 +26,7 @@ export interface Tour {
   highlights: string[]
   options?: TourOption[]
   translations?: Partial<Record<string, Partial<TourTranslation>>>
+  route?: TourRoute
   sort_order?: number
   rating: number
   review_count: number
@@ -64,6 +65,40 @@ export interface TourOption {
   price_modifier_krw: number   // 인당 추가금액
   flat_fee_krw?: number        // 1회 고정 추가금액 (예: 용달비)
   duration_hours?: number      // 해당 옵션의 소요시간
+}
+
+// ============================================================
+// 투어 코스(Route Check-In) 타입
+// ============================================================
+export interface RouteStop {
+  id: string
+  num: number
+  name: string
+  name_en?: string
+  sub: string             // 구간/거리/설명 텍스트 (예: "+5.1km · 달빛무지개분수")
+  sub_en?: string
+  photo: string
+  badge_text: string       // 우상단 배지 (예: "START", "5.1km", "FINISH")
+  badge_color: string      // tailwind bg-* 클래스
+  special?: boolean        // 우상단 리본 표시 (무료 포함 등)
+  ribbon_text?: string     // 리본 문구 (기본 "FREE!")
+  day_label?: string       // 여러 날에 걸친 코스의 구간 묶음 (예: "Day 1")
+  day_desc?: string
+  day_desc_en?: string
+  day_color?: string
+}
+
+export interface RouteSummaryBadge {
+  text: string
+  text_en?: string
+  color?: string           // tailwind bg-* 클래스 (기본 bg-zinc-900)
+}
+
+export interface TourRoute {
+  title?: string           // 기본 "투어 코스"
+  title_en?: string        // 기본 "Tour Route"
+  summary?: RouteSummaryBadge[]
+  stops: RouteStop[]
 }
 
 // ============================================================

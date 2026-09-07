@@ -4,11 +4,12 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import Image from 'next/image'
-import { Plus, Trash2, Upload, X } from 'lucide-react'
+import { Plus, Trash2, Upload, Loader2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 import { revalidateTours } from '@/lib/actions/admin'
-import type { TourOption } from '@/types'
+import RouteStopsEditor from '@/components/admin/RouteStopsEditor'
+import type { TourOption, TourRoute } from '@/types'
 
 interface TourFormData {
   title: string
@@ -24,15 +25,13 @@ interface TourFormData {
   price_krw: string
   price_usd: string
   thumbnail_url: string
-  images: string[]
   meeting_point: string
-  meeting_point_lat: string
-  meeting_point_lng: string
   includes: string
   excludes: string
   requirements: string
   highlights: string
   options: TourOption[]
+  route: TourRoute
   is_active: boolean
 }
 
@@ -70,9 +69,7 @@ export default function TourForm({ initialData }: TourFormProps) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const isEdit = !!initialData?.id
-
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
-  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState<TourFormData>({
     title:             String(initialData?.title ?? ''),
@@ -88,15 +85,15 @@ export default function TourForm({ initialData }: TourFormProps) {
     price_krw:         String(initialData?.price_krw ?? ''),
     price_usd:         String(initialData?.price_usd ?? ''),
     thumbnail_url:     String(initialData?.thumbnail_url ?? ''),
-    images:            Array.isArray(initialData?.images) ? (initialData!.images as string[]) : [],
     meeting_point:     String(initialData?.meeting_point ?? ''),
-    meeting_point_lat: String(initialData?.meeting_point_lat ?? ''),
-    meeting_point_lng: String(initialData?.meeting_point_lng ?? ''),
     includes:          arrToText(initialData?.includes),
     excludes:          arrToText(initialData?.excludes),
     requirements:      arrToText(initialData?.requirements),
     highlights:        arrToText(initialData?.highlights),
     options:           Array.isArray(initialData?.options) ? (initialData!.options as TourOption[]) : [],
+    route:             (initialData?.route && typeof initialData.route === 'object')
+                          ? (initialData.route as TourRoute)
+                          : { title: '', title_en: '', summary: [], stops: [] },
     is_active:         Boolean(initialData?.is_active ?? true),
   })
 
@@ -109,43 +106,21 @@ export default function TourForm({ initialData }: TourFormProps) {
     setForm((f) => ({ ...f, [key]: e.target.value }))
   }
 
-  const uploadFile = async (file: File, path: string): Promise<string | null> => {
-    const { error } = await supabase.storage.from('tours').upload(path, file, { upsert: true })
-    if (error) { toast.error('업로드 실패: ' + error.message); return null }
-    const { data: { publicUrl } } = supabase.storage.from('tours').getPublicUrl(path)
-    return publicUrl
-  }
-
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
     const ext = file.name.split('.').pop()
     const path = `thumbnails/${form.slug || 'new'}-${Date.now()}.${ext}`
-    const url = await uploadFile(file, path)
-    if (url) setForm((f) => ({ ...f, thumbnail_url: url }))
-    setUploading(false)
-    e.target.value = ''
-  }
-
-  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (!files.length) return
-    setUploading(true)
-    const urls: string[] = []
-    for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const path = `gallery/${form.slug || 'new'}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const url = await uploadFile(file, path)
-      if (url) urls.push(url)
+    const { error } = await supabase.storage.from('tours').upload(path, file, { upsert: true })
+    if (error) {
+      toast.error('업로드 실패: ' + error.message)
+    } else {
+      const { data: { publicUrl } } = supabase.storage.from('tours').getPublicUrl(path)
+      setForm((f) => ({ ...f, thumbnail_url: publicUrl }))
     }
-    setForm((f) => ({ ...f, images: [...f.images, ...urls] }))
     setUploading(false)
     e.target.value = ''
-  }
-
-  const removeGalleryImage = (idx: number) => {
-    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))
   }
 
   // Options helpers
@@ -177,15 +152,13 @@ export default function TourForm({ initialData }: TourFormProps) {
       price_krw:         parseInt(form.price_krw),
       price_usd:         form.price_usd ? parseFloat(form.price_usd) : null,
       thumbnail_url:     form.thumbnail_url || null,
-      images:            form.images,
       meeting_point:     form.meeting_point,
-      meeting_point_lat: form.meeting_point_lat ? parseFloat(form.meeting_point_lat) : null,
-      meeting_point_lng: form.meeting_point_lng ? parseFloat(form.meeting_point_lng) : null,
       includes:          form.includes.split('\n').map((s) => s.trim()).filter(Boolean),
       excludes:          form.excludes.split('\n').map((s) => s.trim()).filter(Boolean),
       requirements:      form.requirements.split('\n').map((s) => s.trim()).filter(Boolean),
       highlights:        form.highlights.split('\n').map((s) => s.trim()).filter(Boolean),
       options:           form.options.length > 0 ? form.options : null,
+      route:             form.route,
       is_active:         form.is_active,
       updated_at:        new Date().toISOString(),
     }
@@ -292,11 +265,23 @@ export default function TourForm({ initialData }: TourFormProps) {
         </div>
       </section>
 
-      {/* 이미지 & 집결지 */}
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 space-y-5">
-        <h2 className="font-bold text-zinc-900 text-lg">이미지 & 집결지</h2>
+      {/* 집결지 */}
+      <section className="rounded-2xl border border-zinc-200 bg-white p-6 space-y-4">
+        <h2 className="font-bold text-zinc-900 text-lg">집결지</h2>
+        <div>
+          <label className={labelCls}>집결지 주소 *</label>
+          <input type="text" required value={form.meeting_point} onChange={set('meeting_point')} className={inputCls} placeholder="당산역 4번 출구 (Dangsan Station, Exit 4)" />
+        </div>
+      </section>
 
-        {/* 썸네일 */}
+      {/* 투어 코스 (Route Check-In 갤러리) */}
+      <section className="rounded-2xl border border-zinc-200 bg-white p-6 space-y-5">
+        <div>
+          <h2 className="font-bold text-zinc-900 text-lg">투어 코스 (Route Check-In)</h2>
+          <p className="text-sm text-zinc-400 mt-1">투어 상세 페이지에 표시되는 코스 사진 갤러리입니다. 사진, 순서, 거리/위치 문구를 편집하세요.</p>
+        </div>
+
+        {/* 대표 썸네일 */}
         <div>
           <label className={labelCls}>대표 썸네일 이미지</label>
           <div className="flex gap-3 items-start">
@@ -315,7 +300,7 @@ export default function TourForm({ initialData }: TourFormProps) {
               disabled={uploading}
               className="flex items-center gap-1.5 rounded-xl border border-zinc-300 px-3.5 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 shrink-0"
             >
-              <Upload className="h-4 w-4" />
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               파일 업로드
             </button>
             <input
@@ -333,63 +318,8 @@ export default function TourForm({ initialData }: TourFormProps) {
           )}
         </div>
 
-        {/* 갤러리 */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-zinc-700">갤러리 이미지</label>
-            <button
-              type="button"
-              onClick={() => galleryInputRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center gap-1 text-sm text-emerald-600 hover:text-emerald-700 font-medium disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" />
-              이미지 추가
-            </button>
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleGalleryUpload}
-            />
-          </div>
-          {form.images.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {form.images.map((url, idx) => (
-                <div key={idx} className="relative group aspect-video rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100">
-                  <Image src={url} alt={`갤러리 ${idx + 1}`} fill className="object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removeGalleryImage(idx)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-zinc-400 italic">갤러리 이미지가 없습니다.</p>
-          )}
-          {uploading && <p className="text-xs text-emerald-600 mt-2 animate-pulse">업로드 중...</p>}
-        </div>
-
-        {/* 집결지 */}
-        <div>
-          <label className={labelCls}>집결지 *</label>
-          <input type="text" required value={form.meeting_point} onChange={set('meeting_point')} className={inputCls} placeholder="여의도 한강공원 자전거 대여소" />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelCls}>위도</label>
-            <input type="number" step="any" value={form.meeting_point_lat} onChange={set('meeting_point_lat')} className={inputCls} placeholder="37.5283" />
-          </div>
-          <div>
-            <label className={labelCls}>경도</label>
-            <input type="number" step="any" value={form.meeting_point_lng} onChange={set('meeting_point_lng')} className={inputCls} placeholder="126.9324" />
-          </div>
+        <div className="border-t border-zinc-100 pt-5">
+          <RouteStopsEditor slug={form.slug} value={form.route} onChange={(route) => setForm((f) => ({ ...f, route }))} />
         </div>
       </section>
 

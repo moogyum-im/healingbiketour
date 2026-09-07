@@ -19,6 +19,7 @@ import { localizeTour } from '@/lib/tour-i18n'
 import Badge from '@/components/ui/Badge'
 import BookingWidget from '@/components/tours/BookingWidget'
 import TourLegalSection from '@/components/tours/TourLegalSection'
+import TourRouteSection from '@/components/tours/TourRouteSection'
 import RouteSection from '@/components/tours/RouteSection'
 import AraRouteSection from '@/components/tours/AraRouteSection'
 import HaengjuRouteSection from '@/components/tours/HaengjuRouteSection'
@@ -92,6 +93,7 @@ function buildTour(dbTour: Record<string, unknown>, base?: TourType): TourType {
     excludes:         (dbTour.excludes as string[] | null) ?? base?.excludes ?? [],
     requirements:     (dbTour.requirements as string[] | null) ?? base?.requirements ?? [],
     options:          (dbTour.options as TourType['options']) ?? base?.options,
+    route:            (dbTour.route as TourType['route']) ?? base?.route,
     rating:           base?.rating ?? 0,
     review_count:     base?.review_count ?? 0,
     is_active:        dbTour.is_active as boolean,
@@ -223,19 +225,26 @@ export default async function TourDetailPage({ params }: PageProps) {
               <p className="text-zinc-600 leading-relaxed">{tour.description}</p>
             </section>
 
-            {/* Route Map */}
-            {tour.slug === 'hangang-healing-tour' && <RouteSection />}
-            {tour.slug === 'ara-waterway-tour' && <AraRouteSection />}
-            {tour.slug === 'haengju-fortress-tour' && <HaengjuRouteSection />}
-            {tour.slug === 'peace-nuri-1' && <PeaceNuriRouteSection />}
-            {tour.slug === 'chuncheon-lakeside-tour' && <ChuncheonRouteSection />}
-            {tour.slug === 'national-cycling-route' && <NationalRouteSection />}
-            {tour.slug === 'olympic-park-tour' && <OlympicRouteSection />}
-            {tour.slug === 'yangsu-tour' && <YangsuRouteSection />}
-            {tour.slug === 'seoul-forest-tour' && <SeoulForestRouteSection />}
-            {tour.slug === 'cheonggyecheon-tour' && <CheonggyecheonRouteSection />}
-            {tour.slug === 'boramae-park-tour' && <BoramaeParkRouteSection />}
-            {tour.slug === 'nanji-sky-park-tour' && <NanjiSkyParkRouteSection />}
+            {/* Route Map — 관리자 페이지에서 편집한 코스 데이터(tour.route)가 있으면 그것을 우선 사용,
+                아직 마이그레이션되지 않은 투어는 기존 하드코딩 컴포넌트로 대체 표시 */}
+            {tour.route?.stops?.length ? (
+              <TourRouteSection route={tour.route} />
+            ) : (
+              <>
+                {tour.slug === 'hangang-healing-tour' && <RouteSection />}
+                {tour.slug === 'ara-waterway-tour' && <AraRouteSection />}
+                {tour.slug === 'haengju-fortress-tour' && <HaengjuRouteSection />}
+                {tour.slug === 'peace-nuri-1' && <PeaceNuriRouteSection />}
+                {tour.slug === 'chuncheon-lakeside-tour' && <ChuncheonRouteSection />}
+                {tour.slug === 'national-cycling-route' && <NationalRouteSection />}
+                {tour.slug === 'olympic-park-tour' && <OlympicRouteSection />}
+                {tour.slug === 'yangsu-tour' && <YangsuRouteSection />}
+                {tour.slug === 'seoul-forest-tour' && <SeoulForestRouteSection />}
+                {tour.slug === 'cheonggyecheon-tour' && <CheonggyecheonRouteSection />}
+                {tour.slug === 'boramae-park-tour' && <BoramaeParkRouteSection />}
+                {tour.slug === 'nanji-sky-park-tour' && <NanjiSkyParkRouteSection />}
+              </>
+            )}
 
             {/* Highlights */}
             <section className="mt-8">
